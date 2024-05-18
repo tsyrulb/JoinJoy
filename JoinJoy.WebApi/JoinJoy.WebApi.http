@@ -1,0 +1,6 @@
+@JoinJoy.WebApi_HostAddress = http://localhost:5237
+
+GET {{JoinJoy.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
