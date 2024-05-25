@@ -10,4 +10,5 @@ namespace JoinJoy.Core.Services
     {
         Task<string> ProcessMessageAsync(ChatMessageRequest request);
     }
+
 }

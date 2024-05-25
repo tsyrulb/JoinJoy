@@ -4,10 +4,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoinJoy.WebApi", "JoinJoy.WebApi\JoinJoy.WebApi.csproj", "{4F40D3ED-1707-455E-A3A5-47AEF50AABD7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4CE2A382-C3C0-4455-B52C-F11A3F519ED0} = {4CE2A382-C3C0-4455-B52C-F11A3F519ED0}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoinJoy.Core", "JoinJoy.Core\JoinJoy.Core.csproj", "{8E5F3B14-C5FD-47EF-AB15-4F144A3E024D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoinJoy.Core", "JoinJoy.Core\JoinJoy.Core.csproj", "{8E5F3B14-C5FD-47EF-AB15-4F144A3E024D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoinJoy.Infrastructure", "JoinJoy.Infrastructure\JoinJoy.Infrastructure.csproj", "{4CE2A382-C3C0-4455-B52C-F11A3F519ED0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JoinJoy.Infrastructure", "JoinJoy.Infrastructure\JoinJoy.Infrastructure.csproj", "{4CE2A382-C3C0-4455-B52C-F11A3F519ED0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8E5F3B14-C5FD-47EF-AB15-4F144A3E024D} = {8E5F3B14-C5FD-47EF-AB15-4F144A3E024D}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "API", "API", "{366ABDF6-CAD5-44FA-8050-3B3D4DEC749F}"
 EndProject

@@ -20,7 +20,6 @@ namespace JoinJoy.Core.Services
 
         public async Task<string> ProcessMessageAsync(ChatMessageRequest request)
         {
-            // Simulate conversation logic
             if (request.Message.Contains("company"))
             {
                 return "Hello, User! Do you want to have company in attending something?";
@@ -31,11 +30,11 @@ namespace JoinJoy.Core.Services
             }
             else if (request.Message.Contains("museum"))
             {
-                // Retrieve potential matches
                 var matches = await _matchService.FindMatchesAsync(request.UserId, "museum");
                 return $"I found a few users who also love visiting museums. Would you like to see their profiles?";
             }
             return "I'm not sure how to respond to that.";
         }
     }
+
 }

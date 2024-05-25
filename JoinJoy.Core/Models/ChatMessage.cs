@@ -9,11 +9,10 @@ namespace JoinJoy.Core.Models
 {
     public class ChatMessage
     {
-        [Key]
-        public int ChatMessageID { get; set; }
-        public int SenderID { get; set; }
-        public int ReceiverID { get; set; }
-        public string Content { get; set; }
+        public int Id { get; set; }
+        public string SenderId { get; set; }
+        public string ReceiverId { get; set; }
+        public string Message { get; set; }
         public DateTime Timestamp { get; set; }
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using JoinJoy.Infrastructure.Repositories;
 using JoinJoy.Core.Models;
 
 namespace JoinJoy.Core.Services
