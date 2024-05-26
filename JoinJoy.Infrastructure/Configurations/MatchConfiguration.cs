@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using JoinJoy.Core.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using JoinJoy.Core.Models;
 
 namespace JoinJoy.Infrastructure.Configurations
 {
@@ -14,8 +8,9 @@ namespace JoinJoy.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Match> builder)
         {
-            builder.Property(m => m.MatchDate).IsRequired();
-            // Other configurations for Match entity
+            builder.HasKey(m => m.UserID1);
+            builder.Property(m => m.UserID2).IsRequired();
+            builder.Property(m => m.MatchID).IsRequired();
         }
     }
 }

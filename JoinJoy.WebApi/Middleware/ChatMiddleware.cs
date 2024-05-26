@@ -1,19 +1,22 @@
-﻿// File: JoinJoy.WebApi/Middleware/ChatMiddleware.cs
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 
-public class ChatMiddleware
+namespace JoinJoy.WebApi.Middleware
 {
-    private readonly RequestDelegate _next;
-
-    public ChatMiddleware(RequestDelegate next)
+    public class ChatMiddleware
     {
-        _next = next;
-    }
+        private readonly RequestDelegate _next;
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        // Chat handling logic
-        await _next(context);
+        public ChatMiddleware(RequestDelegate next)
+        {
+            _next = next;
+        }
+
+        public async Task InvokeAsync(HttpContext context)
+        {
+            // Implement your chat handling logic here
+
+            await _next(context);
+        }
     }
 }

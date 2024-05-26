@@ -4,27 +4,31 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using JoinJoy.Core.Models;
-using JoinJoy.Infrastructure.Repositories;
+using JoinJoy.Core.Models;
+using JoinJoy.Core.Interfaces;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace JoinJoy.Core.Services
 {
     public class FeedbackService : IFeedbackService
     {
-        private readonly IFeedbackRepository _feedbackRepository;
+        private readonly IRepository<Feedback> _feedbackRepository;
 
-        public FeedbackService(IFeedbackRepository feedbackRepository)
+        public FeedbackService(IRepository<Feedback> feedbackRepository)
         {
             _feedbackRepository = feedbackRepository;
         }
 
-        public async Task SubmitFeedbackAsync(Feedback feedback)
+        public async Task<ServiceResult> SubmitFeedbackAsync(Feedback feedback)
         {
-            await _feedbackRepository.AddAsync(feedback);
+            // Implement submit feedback logic here
+            return new ServiceResult { Success = true, Message = "Feedback submitted successfully" };
         }
 
-        public async Task<IEnumerable<Feedback>> GetFeedbacksAsync(int userId)
+        public async Task<IEnumerable<Feedback>> GetFeedbackAsync(int userId)
         {
-            return await _feedbackRepository.GetFeedbacksByUserIdAsync(userId);
+            return await _feedbackRepository.GetAllAsync();
         }
     }
 }

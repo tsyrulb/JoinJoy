@@ -13,6 +13,7 @@ namespace JoinJoy.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Feedback> builder)
         {
+            builder.HasKey(f => f.FeedbackID);
             builder.Property(f => f.Rating).IsRequired();
             builder.Property(f => f.Comments).HasMaxLength(1000);
             builder.Property(f => f.FeedbackDate).IsRequired();

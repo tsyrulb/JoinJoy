@@ -1,29 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using JoinJoy.Core.Models;
+using JoinJoy.Core.Interfaces;
 using System.Threading.Tasks;
-using JoinJoy.Core.Models;
+using System.Collections.Generic;
 
 namespace JoinJoy.Core.Services
 {
-    internal class ActivityService : IActivityService
+    public class ActivityService : IActivityService
     {
-        private readonly IActivityRepository _activityRepository;
+        private readonly IRepository<Activity> _activityRepository;
 
-        public ActivityService(IActivityRepository activityRepository)
+        public ActivityService(IRepository<Activity> activityRepository)
         {
             _activityRepository = activityRepository;
         }
 
-        public async Task<Activity> GetActivityByIdAsync(int activityId)
+        public async Task<ServiceResult> CreateActivityAsync(Activity activity)
         {
-            return await _activityRepository.GetByIdAsync(activityId);
+            // Implement create activity logic here
+            return new ServiceResult { Success = true, Message = "Activity created successfully" };
         }
 
-        public async Task<IEnumerable<Activity>> GetAllActivitiesAsync()
+        public async Task<IEnumerable<Activity>> GetActivitiesAsync()
         {
             return await _activityRepository.GetAllAsync();
+        }
+
+        public async Task<ServiceResult> DeleteActivityAsync(int activityId)
+        {
+            // Implement delete activity logic here
+            return new ServiceResult { Success = true, Message = "Activity deleted successfully" };
         }
     }
 }

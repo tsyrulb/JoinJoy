@@ -1,22 +1,26 @@
-﻿using JoinJoy.Core.Services;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using JoinJoy.Core.Services;
+using JoinJoy.Core.Models;
 using System.Threading.Tasks;
 
-[Route("api/[controller]")]
-[ApiController]
-public class ChatController : ControllerBase
+namespace JoinJoy.WebApi.Controllers
 {
-    private readonly IChatService _chatService;
-
-    public ChatController(IChatService chatService)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ChatController : ControllerBase
     {
-        _chatService = chatService;
-    }
+        private readonly IChatService _chatService;
 
-    [HttpPost("message")]
-    public async Task<IActionResult> PostMessage(ChatMessageRequest request)
-    {
-        var response = await _chatService.ProcessMessageAsync(request);
-        return Ok(response);
+        public ChatController(IChatService chatService)
+        {
+            _chatService = chatService;
+        }
+
+        [HttpPost("message")]
+        public async Task<IActionResult> PostMessage(ChatMessageRequest request)
+        {
+            var response = await _chatService.ProcessMessageAsync(request);
+            return Ok(response);
+        }
     }
 }

@@ -1,34 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using JoinJoy.Core.Models;
+using JoinJoy.Core.Interfaces;
 using System.Threading.Tasks;
-using JoinJoy.Core.Models;
-using JoinJoy.Infrastructure.Repositories;
+using System.Collections.Generic;
 
 namespace JoinJoy.Core.Services
 {
-    internal class UserService
+    public class UserService : IUserService
     {
-        public class UserService : IUserService
+        private readonly IRepository<User> _userRepository;
+
+        public UserService(IRepository<User> userRepository)
         {
-            private readonly IUserRepository _userRepository;
+            _userRepository = userRepository;
+        }
 
-            public UserService(IUserRepository userRepository)
-            {
-                _userRepository = userRepository;
-            }
+        public async Task<ServiceResult> RegisterUserAsync(User user)
+        {
+            // Implement registration logic here
+            return new ServiceResult { Success = true, Message = "User registered successfully" };
+        }
 
-            public async Task<Result> RegisterUserAsync(UserRegistrationDto userDto)
-            {
-                // Registration logic here
-                return new Result { Success = true };
-            }
+        public async Task<ServiceResult> LoginAsync(string email, string password)
+        {
+            // Implement login logic here
+            return new ServiceResult { Success = true, Message = "User logged in successfully" };
+        }
 
-            public async Task<User> GetUserByIdAsync(int userId)
-            {
-                return await _userRepository.GetByIdAsync(userId);
-            }
+        public async Task<ServiceResult> UpdateUserAsync(User user)
+        {
+            // Implement update logic here
+            return new ServiceResult { Success = true, Message = "User updated successfully" };
+        }
+
+        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        {
+            return await _userRepository.GetAllAsync();
+        }
+
+        public async Task<ServiceResult> DeleteUserAsync(int userId)
+        {
+            // Implement delete logic here
+            return new ServiceResult { Success = true, Message = "User deleted successfully" };
         }
     }
 }

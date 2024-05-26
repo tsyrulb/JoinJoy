@@ -1,12 +1,12 @@
-﻿// File: JoinJoy.WebApi/Controllers/FeedbackController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using JoinJoy.Core.Services;
 using JoinJoy.Core.Models;
+using System.Threading.Tasks;
 
 namespace JoinJoy.WebApi.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class FeedbackController : ControllerBase
     {
         private readonly IFeedbackService _feedbackService;
@@ -16,18 +16,22 @@ namespace JoinJoy.WebApi.Controllers
             _feedbackService = feedbackService;
         }
 
-        [HttpPost]
+        [HttpPost("submit")]
         public async Task<IActionResult> SubmitFeedback(Feedback feedback)
         {
-            await _feedbackService.SubmitFeedbackAsync(feedback);
-            return Ok();
+            var result = await _feedbackService.SubmitFeedbackAsync(feedback);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
 
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetFeedbacks(int userId)
+        [HttpGet("list")]
+        public async Task<IActionResult> ListFeedback(int userId)
         {
-            var feedbacks = await _feedbackService.GetFeedbacksAsync(userId);
-            return Ok(feedbacks);
+            var result = await _feedbackService.GetFeedbackAsync(userId);
+            return Ok(result);
         }
     }
 }

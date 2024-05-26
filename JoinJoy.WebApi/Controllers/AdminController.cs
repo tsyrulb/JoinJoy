@@ -1,35 +1,56 @@
-﻿// File: JoinJoy.WebApi/Controllers/AdminController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using JoinJoy.Core.Services;
-using JoinJoy.Core.Models;
+using System.Threading.Tasks;
 
 namespace JoinJoy.WebApi.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class AdminController : ControllerBase
     {
-        private readonly IAdminService _adminService;
+        private readonly IUserService _userService;
+        private readonly IActivityService _activityService;
 
-        public AdminController(IAdminService adminService)
+        public AdminController(IUserService userService, IActivityService activityService)
         {
-            _adminService = adminService;
+            _userService = userService;
+            _activityService = activityService;
         }
 
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateAdmin(Admin admin)
+        [HttpGet("users")]
+        public async Task<IActionResult> GetUsers()
         {
-            await _adminService.CreateAdminAsync(admin);
-            return Ok();
+            var result = await _userService.GetAllUsersAsync();
+            return Ok(result);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetAdmin(int id)
+        [HttpGet("activities")]
+        public async Task<IActionResult> GetActivities()
         {
-            var admin = await _adminService.GetAdminByIdAsync(id);
-            if (admin != null)
-                return Ok(admin);
-            return NotFound();
+            var result = await _activityService.GetActivitiesAsync();
+            return Ok(result);
+        }
+
+        [HttpDelete("delete-user")]
+        public async Task<IActionResult> DeleteUser(int userId)
+        {
+            var result = await _userService.DeleteUserAsync(userId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        [HttpDelete("delete-activity")]
+        public async Task<IActionResult> DeleteActivity(int activityId)
+        {
+            var result = await _activityService.DeleteActivityAsync(activityId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
     }
 }

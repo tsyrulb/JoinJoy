@@ -1,12 +1,12 @@
-﻿// File: JoinJoy.WebApi/Controllers/MessagesController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using JoinJoy.Core.Services;
 using JoinJoy.Core.Models;
+using System.Threading.Tasks;
 
 namespace JoinJoy.WebApi.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class MessagesController : ControllerBase
     {
         private readonly IMessageService _messageService;
@@ -16,18 +16,22 @@ namespace JoinJoy.WebApi.Controllers
             _messageService = messageService;
         }
 
-        [HttpPost]
+        [HttpPost("send")]
         public async Task<IActionResult> SendMessage(Message message)
         {
-            await _messageService.SendMessageAsync(message);
-            return Ok();
+            var result = await _messageService.SendMessageAsync(message);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
 
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetMessages(int userId)
+        [HttpGet("list")]
+        public async Task<IActionResult> ListMessages(int userId)
         {
-            var messages = await _messageService.GetMessagesAsync(userId);
-            return Ok(messages);
+            var result = await _messageService.GetMessagesAsync(userId);
+            return Ok(result);
         }
     }
 }

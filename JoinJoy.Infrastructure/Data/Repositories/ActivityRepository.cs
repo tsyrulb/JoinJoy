@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Models;
 
-namespace JoinJoy.Infrastructure.Repositories
+namespace JoinJoy.Infrastructure.Data.Repositories
 {
     public class ActivityRepository : Repository<Activity>, IActivityRepository
     {
-        public ActivityRepository(JoinJoyDbContext context) : base(context) { }
+        public ActivityRepository(ApplicationDbContext context) : base(context)
+        {
+        }
     }
 }

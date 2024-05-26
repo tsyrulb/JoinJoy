@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using JoinJoy.Core.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using JoinJoy.Core.Models;
 
 namespace JoinJoy.Infrastructure.Configurations
 {
@@ -13,9 +8,15 @@ namespace JoinJoy.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<User> builder)
         {
-            builder.Property(u => u.Username).IsRequired().HasMaxLength(50);
-            builder.Property(u => u.Email).IsRequired().HasMaxLength(50);
-            // Other configurations for User entity
+            builder.HasKey(u => u.UserID);
+            builder.Property(u => u.Username).IsRequired().HasMaxLength(100);
+            builder.Property(u => u.Email).IsRequired().HasMaxLength(100);
+            builder.Property(u => u.PasswordHash).IsRequired();
+            builder.Property(u => u.Interests).HasMaxLength(2000);
+            builder.Property(u => u.Hobbies).HasMaxLength(2000);
+            builder.Property(u => u.Activities).HasMaxLength(2000);
+            builder.Property(u => u.PreferredDestinations).HasMaxLength(2000);
+            builder.Property(u => u.Availability).HasMaxLength(2000);
         }
     }
 }

@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using JoinJoy.Core.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using JoinJoy.Core.Models;
 
 namespace JoinJoy.Infrastructure.Configurations
 {
@@ -13,11 +8,10 @@ namespace JoinJoy.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<ChatMessage> builder)
         {
-            builder.HasKey(cm => cm.Id);
-            builder.Property(cm => cm.SenderId).IsRequired();
-            builder.Property(cm => cm.ReceiverId).IsRequired();
-            builder.Property(cm => cm.Message).IsRequired();
-            builder.Property(cm => cm.Timestamp).IsRequired();
+            builder.HasKey(c => c.Id);
+            builder.Property(c => c.SenderId).IsRequired();
+            builder.Property(c => c.ReceiverId).IsRequired();
+            builder.Property(c => c.Message).IsRequired().HasMaxLength(2000);
         }
     }
 }

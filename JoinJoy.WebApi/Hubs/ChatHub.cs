@@ -1,9 +1,23 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System.Threading.Tasks;
+using JoinJoy.Core.Services;
+using JoinJoy.Core.Models;
 
-public class ChatHub : Hub
+namespace JoinJoy.WebApi.Hubs
 {
-    public async Task SendMessage(string user, string message)
+    public class ChatHub : Hub
     {
-        await Clients.All.SendAsync("ReceiveMessage", user, message);
+        private readonly IChatService _chatService;
+
+        public ChatHub(IChatService chatService)
+        {
+            _chatService = chatService;
+        }
+
+        public async Task SendMessage(int user, string message)
+        {
+            var response = await _chatService.ProcessMessageAsync(new ChatMessageRequest { UserId = user, Message = message });
+            await Clients.All.SendAsync("ReceiveMessage", user, response);
+        }
     }
 }

@@ -1,12 +1,12 @@
-﻿// File: JoinJoy.WebApi/Controllers/ActivitiesController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using JoinJoy.Core.Services;
 using JoinJoy.Core.Models;
+using System.Threading.Tasks;
 
 namespace JoinJoy.WebApi.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class ActivitiesController : ControllerBase
     {
         private readonly IActivityService _activityService;
@@ -16,20 +16,22 @@ namespace JoinJoy.WebApi.Controllers
             _activityService = activityService;
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetActivity(int id)
+        [HttpPost("create")]
+        public async Task<IActionResult> Create(Activity activity)
         {
-            var activity = await _activityService.GetActivityByIdAsync(id);
-            if (activity != null)
-                return Ok(activity);
-            return NotFound();
+            var result = await _activityService.CreateActivityAsync(activity);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAllActivities()
+        [HttpGet("list")]
+        public async Task<IActionResult> List()
         {
-            var activities = await _activityService.GetAllActivitiesAsync();
-            return Ok(activities);
+            var result = await _activityService.GetActivitiesAsync();
+            return Ok(result);
         }
     }
 }

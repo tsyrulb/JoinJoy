@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Models;
 
-namespace JoinJoy.Infrastructure.Repositories
+namespace JoinJoy.Infrastructure.Data.Repositories
 {
     public class FeedbackRepository : Repository<Feedback>, IFeedbackRepository
     {
-        public FeedbackRepository(JoinJoyDbContext context) : base(context) { }
+        public FeedbackRepository(ApplicationDbContext context) : base(context)
+        {
+        }
     }
 }

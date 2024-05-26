@@ -1,12 +1,11 @@
-﻿// File: JoinJoy.WebApi/Controllers/MatchesController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using JoinJoy.Core.Services;
-using JoinJoy.Core.Models;
+using System.Threading.Tasks;
 
 namespace JoinJoy.WebApi.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class MatchesController : ControllerBase
     {
         private readonly IMatchService _matchService;
@@ -16,11 +15,11 @@ namespace JoinJoy.WebApi.Controllers
             _matchService = matchService;
         }
 
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetMatches(int userId, [FromQuery] string interest)
+        [HttpGet("find")]
+        public async Task<IActionResult> FindMatches(int userId, string interest)
         {
-            var matches = await _matchService.FindMatchesAsync(userId, interest);
-            return Ok(matches);
+            var result = await _matchService.FindMatchesAsync(userId, interest);
+            return Ok(result);
         }
     }
 }

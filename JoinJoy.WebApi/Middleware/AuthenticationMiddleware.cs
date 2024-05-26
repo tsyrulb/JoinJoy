@@ -1,19 +1,22 @@
-﻿// File: JoinJoy.WebApi/Middleware/AuthenticationMiddleware.cs
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 
-public class AuthenticationMiddleware
+namespace JoinJoy.WebApi.Middleware
 {
-    private readonly RequestDelegate _next;
-
-    public AuthenticationMiddleware(RequestDelegate next)
+    public class AuthenticationMiddleware
     {
-        _next = next;
-    }
+        private readonly RequestDelegate _next;
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        // Authentication logic here
-        await _next(context);
+        public AuthenticationMiddleware(RequestDelegate next)
+        {
+            _next = next;
+        }
+
+        public async Task InvokeAsync(HttpContext context)
+        {
+            // Implement your authentication logic here
+
+            await _next(context);
+        }
     }
 }
