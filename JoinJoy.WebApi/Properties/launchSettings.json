@@ -1,4 +1,7 @@
-﻿{
+﻿// is this code correct?// is this code correct?
+// if not, fix it
+
+{
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "iisSettings": {
     "windowsAuthentication": false,
@@ -39,3 +42,5 @@
     }
   }
 }
+
+
