@@ -5,10 +5,15 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using JoinJoy.Core.Models;
 using System;
+using System.Threading.Tasks;
+using JoinJoy.Core.Models;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
+using System.Net.Http;
 
 namespace JoinJoy.Infrastructure.Services
 {
-    public class GISService
+    public class GISService : IGISService
     {
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
@@ -19,39 +24,24 @@ namespace JoinJoy.Infrastructure.Services
             _httpClient = httpClient;
         }
 
-        public async Task<double> CalculateDistanceAsync(Location location1, Location location2)
+        public async Task<Location> GetCoordinatesAsync(string address)
         {
-            // Example implementation using Google Maps API
-            var apiKey = _configuration["GoogleMapsApiKey"];
-            var requestUri = $"https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins={location1.Latitude},{location1.Longitude}&destinations={location2.Latitude},{location2.Longitude}&key={apiKey}";
+            var apiKey = _configuration["GoogleMaps:ApiKey"];
+            var requestUri = $"https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={apiKey}";
 
-            var response = await _httpClient.GetFromJsonAsync<GoogleDistanceMatrixResponse>(requestUri);
-            if (response == null || response.Rows.Count == 0 || response.Rows[0].Elements.Count == 0)
+            var response = await _httpClient.GetStringAsync(requestUri);
+            var json = JObject.Parse(response);
+
+            var location = json["results"][0]["geometry"]["location"];
+            var latitude = (double)location["lat"];
+            var longitude = (double)location["lng"];
+
+            return new Location
             {
-                throw new Exception("Unable to calculate distance");
-            }
-
-            return response.Rows[0].Elements[0].Distance.Value / 1000.0; // Convert to kilometers
-        }
-
-        private class GoogleDistanceMatrixResponse
-        {
-            public List<Row> Rows { get; set; }
-        }
-
-        private class Row
-        {
-            public List<Element> Elements { get; set; }
-        }
-
-        private class Element
-        {
-            public Distance Distance { get; set; }
-        }
-
-        private class Distance
-        {
-            public double Value { get; set; }
+                Address = address,
+                Latitude = latitude,
+                Longitude = longitude
+            };
         }
     }
 }

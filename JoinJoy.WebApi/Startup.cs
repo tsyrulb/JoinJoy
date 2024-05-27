@@ -6,6 +6,7 @@ using JoinJoy.Infrastructure.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using JoinJoy.WebApi.Hubs;
 using JoinJoy.WebApi.Middleware;
+using JoinJoy.Infrastructure.Services;
 
 namespace JoinJoy.WebApi
 {
@@ -26,20 +27,22 @@ namespace JoinJoy.WebApi
 
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            // Add repositories
             services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IActivityRepository, ActivityRepository>();
-            services.AddScoped<IMatchRepository, MatchRepository>();
-            services.AddScoped<IMessageRepository, MessageRepository>();
-            services.AddScoped<IFeedbackRepository, FeedbackRepository>();
-            services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+            services.AddScoped<IInterestRepository, InterestRepository>();
+            services.AddScoped<IHobbyRepository, HobbyRepository>();
+            services.AddScoped<IActivityPreferenceRepository, ActivityPreferenceRepository>();
+            services.AddScoped<IPreferredDestinationRepository, PreferredDestinationRepository>();
+            services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
+            // Add other repositories...
 
-            // Register services
+            // Add application services
             services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IActivityService, ActivityService>();
-            services.AddScoped<IMatchService, MatchService>();
-            services.AddScoped<IMessageService, MessageService>();
-            services.AddScoped<IFeedbackService, FeedbackService>();
-            services.AddScoped<IChatService, ChatService>();
+            services.AddScoped<IInterestService, InterestService>();
+            services.AddScoped<IHobbyService, HobbyService>();
+            services.AddScoped<IActivityPreferenceService, ActivityPreferenceService>();
+            services.AddScoped<IPreferredDestinationService, PreferredDestinationService>();
+            services.AddScoped<IAvailabilityService, AvailabilityService>();
 
             services.AddControllers();
 

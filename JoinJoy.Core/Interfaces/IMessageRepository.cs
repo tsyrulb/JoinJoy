@@ -1,9 +1,11 @@
-﻿using JoinJoy.Core.Models;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using JoinJoy.Core.Models;
 
 namespace JoinJoy.Core.Interfaces
 {
     public interface IMessageRepository : IRepository<Message>
     {
-        // Add any additional methods specific to Message repository if needed
+        Task<IEnumerable<Message>> GetMessagesForUserAsync(int userId);
     }
 }

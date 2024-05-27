@@ -1,26 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
-
-namespace JoinJoy.Core.Models
+﻿namespace JoinJoy.Core.Models
 {
     public class User
     {
-        [Key]
-        public int UserID { get; set; }
-        public string Username { get; set; }
-        public string PasswordHash { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
         public string Email { get; set; }
+        public string Password { get; set; }
         public string ProfilePhoto { get; set; }
-        public string Interests { get; set; }  // JSON string
-        public string Hobbies { get; set; }  // JSON string
-        public string Activities { get; set; }  // JSON string
-        public string PreferredDestinations { get; set; }  // JSON string
-        public string Availability { get; set; }  // JSON string
-        public int DistanceWillingToTravel { get; set; }
+        public bool IsAdmin { get; set; }
         public Location Location { get; set; }
+
+        // New properties for detailed data points
+        public ICollection<UserInterest> UserInterests { get; set; }
+        public ICollection<UserHobby> UserHobbies { get; set; }
+        public ICollection<UserActivityPreference> UserActivityPreferences { get; set; }
+        public ICollection<UserPreferredDestination> UserPreferredDestinations { get; set; }
+        public ICollection<UserAvailability> UserAvailabilities { get; set; }
+        public double DistanceWillingToTravel { get; set; }
+
+        // Navigation properties
+        public ICollection<UserActivity> UserActivities { get; set; }
+        public ICollection<Match> Matches { get; set; }
+        public ICollection<Message> SentMessages { get; set; } // Sent messages
+        public ICollection<Message> ReceivedMessages { get; set; } // Received messages
+        public ICollection<Feedback> Feedbacks { get; set; }
+        public ICollection<Activity> CreatedActivities { get; set; } // Added this line
+
+        // Separate collections for ChatMessages if they are indeed different from Messages
+        public ICollection<ChatMessage> SentChatMessages { get; set; } // Sent chat messages
+        public ICollection<ChatMessage> ReceivedChatMessages { get; set; } // Received chat messages
     }
 }

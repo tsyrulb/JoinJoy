@@ -10,18 +10,15 @@ namespace JoinJoy.Core.Models
 {
     public class Feedback
     {
-        [Key]
-        public int FeedbackID { get; set; }
-        public int UserID { get; set; }
-        public int ActivityID { get; set; }
-        public int Rating { get; set; }
-        public string Comments { get; set; }
-        public DateTime FeedbackDate { get; set; }
+        public int Id { get; set; } // Unique identifier for the feedback
+        public int UserId { get; set; } // ID of the user providing the feedback
+        public int ActivityId { get; set; } // ID of the activity being reviewed
+        public string Comments { get; set; } // Feedback comments from the user
+        public int Rating { get; set; } // Rating provided by the user
+        public DateTime Timestamp { get; set; } // Time when the feedback was submitted
 
-        [ForeignKey("UserID")]
-        public User User { get; set; }
-
-        [ForeignKey("ActivityID")]
-        public Activity Activity { get; set; }
+        // Navigation properties
+        public User User { get; set; } // Reference to the user providing feedback
+        public Activity Activity { get; set; } // Reference to the activity being reviewed
     }
 }

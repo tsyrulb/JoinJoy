@@ -4,26 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace JoinJoy.Core.Models
 {
     public class Match
     {
-        [Key]
-        public int MatchID { get; set; }
-        public int UserID1 { get; set; }
-        public int UserID2 { get; set; }
-        public int ActivityID { get; set; }
-        public DateTime MatchDate { get; set; }
+        public int Id { get; set; } // Unique identifier for the match
+        public int UserId1 { get; set; } // ID of the first user in the match
+        public int UserId2 { get; set; } // ID of the second user in the match
+        public int ActivityId { get; set; } // ID of the activity associated with the match
+        public DateTime MatchDate { get; set; } // Date when the match was made
+        public bool IsAccepted { get; set; } // Status indicating if the match was accepted
 
-        [ForeignKey("UserID1")]
-        public User User1 { get; set; }
-
-        [ForeignKey("UserID2")]
-        public User User2 { get; set; }
-
-        [ForeignKey("ActivityID")]
-        public Activity Activity { get; set; }
+        // Navigation properties
+        public User User1 { get; set; } // Reference to the first user
+        public User User2 { get; set; } // Reference to the second user
+        public Activity Activity { get; set; } // Reference to the activity
     }
 }

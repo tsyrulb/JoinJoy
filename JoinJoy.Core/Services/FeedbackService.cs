@@ -1,34 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using JoinJoy.Core.Models;
-using JoinJoy.Core.Models;
 using JoinJoy.Core.Interfaces;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+using JoinJoy.Core.Models;
+using JoinJoy.Core.Services;
 
-namespace JoinJoy.Core.Services
+namespace JoinJoy.Infrastructure.Services
 {
     public class FeedbackService : IFeedbackService
     {
-        private readonly IRepository<Feedback> _feedbackRepository;
+        private readonly IFeedbackRepository _feedbackRepository;
 
-        public FeedbackService(IRepository<Feedback> feedbackRepository)
+        public FeedbackService(IFeedbackRepository feedbackRepository)
         {
             _feedbackRepository = feedbackRepository;
         }
 
         public async Task<ServiceResult> SubmitFeedbackAsync(Feedback feedback)
         {
-            // Implement submit feedback logic here
+            await _feedbackRepository.AddAsync(feedback);
             return new ServiceResult { Success = true, Message = "Feedback submitted successfully" };
         }
 
-        public async Task<IEnumerable<Feedback>> GetFeedbackAsync(int userId)
+        public async Task<IEnumerable<Feedback>> GetFeedbackForActivityAsync(int activityId)
         {
-            return await _feedbackRepository.GetAllAsync();
+            return await _feedbackRepository.GetFeedbackForActivityAsync(activityId);
+        }
+
+        public async Task<IEnumerable<Feedback>> GetUserFeedbackAsync(int userId)
+        {
+            return await _feedbackRepository.GetUserFeedbackAsync(userId);
+        }
+
+        public Task<IEnumerable<Feedback>> GetFeedbackAsync(int userId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

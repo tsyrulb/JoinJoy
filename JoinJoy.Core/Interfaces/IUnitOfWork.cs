@@ -4,17 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using JoinJoy.Core.Models;
+using System.Threading.Tasks;
 
 namespace JoinJoy.Core.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {
-        IRepository<User> Users { get; }
-        IRepository<Activity> Activities { get; }
-        IRepository<Match> Matches { get; }
-        IRepository<Message> Messages { get; }
-        IRepository<Feedback> Feedbacks { get; }
-        IRepository<ChatMessage> ChatMessages { get; }
-        Task<int> CompleteAsync();
+        IActivityRepository Activities { get; }
+        IChatMessageRepository ChatMessages { get; }
+        IFeedbackRepository Feedbacks { get; }
+        IMatchRepository Matches { get; }
+        IMessageRepository Messages { get; }
+        IUserRepository Users { get; }
+        Task<int> CommitAsync();
     }
 }

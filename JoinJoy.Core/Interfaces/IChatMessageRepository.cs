@@ -1,9 +1,11 @@
-﻿using JoinJoy.Core.Models;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using JoinJoy.Core.Models;
 
 namespace JoinJoy.Core.Interfaces
 {
     public interface IChatMessageRepository : IRepository<ChatMessage>
     {
-        // Add any additional methods specific to ChatMessage repository if needed
+        Task<IEnumerable<ChatMessage>> GetMessagesForUserAsync(int userId);
     }
 }

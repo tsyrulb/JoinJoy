@@ -1,40 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Models;
+using JoinJoy.Core.Services;
 
-namespace JoinJoy.Core.Services
+namespace JoinJoy.Infrastructure.Services
 {
     public class ChatService : IChatService
     {
-        private readonly IUserService _userService;
-        private readonly IMatchService _matchService;
+        private readonly IChatMessageRepository _chatMessageRepository;
 
-        public ChatService(IUserService userService, IMatchService matchService)
+        public ChatService(IChatMessageRepository chatMessageRepository)
         {
-            _userService = userService;
-            _matchService = matchService;
+            _chatMessageRepository = chatMessageRepository;
         }
 
-        public async Task<string> ProcessMessageAsync(ChatMessageRequest request)
+        public async Task<ServiceResult> SendMessageAsync(ChatMessage chatMessage)
         {
-            if (request.Message.Contains("company"))
-            {
-                return "Hello, User! Do you want to have company in attending something?";
-            }
-            else if (request.Message.Contains("yes"))
-            {
-                return "What do you want to attend?";
-            }
-            else if (request.Message.Contains("museum"))
-            {
-                var matches = await _matchService.FindMatchesAsync(request.UserId, "museum");
-                return $"I found a few users who also love visiting museums. Would you like to see their profiles?";
-            }
-            return "I'm not sure how to respond to that.";
+            await _chatMessageRepository.AddAsync(chatMessage);
+            return new ServiceResult { Success = true, Message = "Chat message sent successfully" };
+        }
+
+        public async Task<IEnumerable<ChatMessage>> GetChatMessagesAsync(int userId)
+        {
+            return await _chatMessageRepository.GetMessagesForUserAsync(userId);
+        }
+
+        public Task<string> ProcessMessageAsync(ChatMessageRequest request)
+        {
+            throw new NotImplementedException();
         }
     }
-
 }

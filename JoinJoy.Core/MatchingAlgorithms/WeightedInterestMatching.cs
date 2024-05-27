@@ -14,15 +14,15 @@ namespace JoinJoy.Core.MatchingAlgorithms
             var matches = new List<Match>();
             foreach (var user in allUsers)
             {
-                if (user.UserID != currentUser.UserID && user.Interests.Contains(interest))
+                if (user.Id != currentUser.Id )
                 {
-                    var compatibilityScore = CalculateCompatibility(currentUser, user);
+                    var compatibilityScore = 0; //CalculateCompatibility(currentUser, user);
                     if (compatibilityScore > 0.5) // Threshold for matching
                     {
                         matches.Add(new Match
                         {
-                            UserID1 = currentUser.UserID,
-                            UserID2 = user.UserID,
+                            User1 = currentUser,
+                            User2 = user,
                             MatchDate = System.DateTime.Now
                         });
                     }
@@ -31,17 +31,17 @@ namespace JoinJoy.Core.MatchingAlgorithms
             return matches;
         }
 
-        private double CalculateCompatibility(User currentUser, User user)
-        {
-            double compatibilityScore = 0;
-            foreach (var interest in currentUser.Interests.Split(','))
-            {
-                if (user.Interests.Contains(interest))
-                {
-                    compatibilityScore += 1; // Simplified compatibility calculation
-                }
-            }
-            return compatibilityScore / currentUser.Interests.Split(',').Length;
-        }
+        // private double CalculateCompatibility(User currentUser, User user)
+        // {
+        // double compatibilityScore = 0;
+        //     foreach (var interest in currentUser.Interests.Split(','))
+        //      {
+        //          if (user.Interests.Contains(interest))
+        //          {
+        //  compatibilityScore += 1; // Simplified compatibility calculation
+        // }
+        //  }
+        //      return compatibilityScore / currentUser.Interests.Split(',').Length;
+        // }
     }
 }

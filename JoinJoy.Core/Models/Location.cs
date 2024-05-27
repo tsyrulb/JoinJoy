@@ -9,10 +9,13 @@ namespace JoinJoy.Core.Models
 {
     public class Location
     {
-        [Key]
-        public int LocationID { get; set; }
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
-        public string Address { get; set; }
+        public int Id { get; set; } // Unique identifier for the location
+        public double Latitude { get; set; } // Latitude coordinate for the location
+        public double Longitude { get; set; } // Longitude coordinate for the location
+        public string Address { get; set; } // Address of the location
+
+        // Navigation properties
+        public ICollection<Activity> Activities { get; set; } // Collection of activities at this location
+
     }
 }

@@ -1,9 +1,12 @@
-﻿using JoinJoy.Core.Models;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using JoinJoy.Core.Models;
 
 namespace JoinJoy.Core.Interfaces
 {
     public interface IFeedbackRepository : IRepository<Feedback>
     {
-        // Add any additional methods specific to Feedback repository if needed
+        Task<IEnumerable<Feedback>> GetFeedbackForActivityAsync(int activityId);
+        Task<IEnumerable<Feedback>> GetUserFeedbackAsync(int userId);
     }
 }

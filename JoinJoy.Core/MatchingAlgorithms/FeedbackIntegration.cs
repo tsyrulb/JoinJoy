@@ -24,15 +24,12 @@ namespace JoinJoy.Core.MatchingAlgorithms
         private void IncreaseCompatibilityScore(User user1, User user2)
         {
             // Simplified logic for increasing compatibility score
-            user1.Interests += ",PositiveFeedback";
-            user2.Interests += ",PositiveFeedback";
+
         }
 
         private void DecreaseCompatibilityScore(User user1, User user2)
         {
             // Simplified logic for decreasing compatibility score
-            user1.Interests += ",NegativeFeedback";
-            user2.Interests += ",NegativeFeedback";
         }
     }
 }

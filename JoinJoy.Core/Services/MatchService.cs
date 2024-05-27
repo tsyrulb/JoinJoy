@@ -1,23 +1,52 @@
-﻿using JoinJoy.Core.Models;
-using JoinJoy.Core.Interfaces;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using JoinJoy.Core.Interfaces;
+using JoinJoy.Core.Models;
+using JoinJoy.Core.Services;
 
-namespace JoinJoy.Core.Services
+namespace JoinJoy.Infrastructure.Services
 {
     public class MatchService : IMatchService
     {
-        private readonly IRepository<Match> _matchRepository;
+        private readonly IMatchRepository _matchRepository;
 
-        public MatchService(IRepository<Match> matchRepository)
+        public MatchService(IMatchRepository matchRepository)
         {
             _matchRepository = matchRepository;
         }
 
-        public async Task<IEnumerable<Match>> FindMatchesAsync(int userId, string interest)
+        public async Task<IEnumerable<Match>> GetMatchesForUserAsync(int userId)
         {
-            // Implement find matches logic here
-            return new List<Match>();
+            return await _matchRepository.GetMatchesForUserAsync(userId);
+        }
+
+        public async Task<ServiceResult> AcceptMatchAsync(int matchId)
+        {
+            var match = await _matchRepository.GetByIdAsync(matchId);
+            if (match != null)
+            {
+                match.IsAccepted = true;
+                await _matchRepository.UpdateAsync(match);
+                return new ServiceResult { Success = true, Message = "Match accepted successfully" };
+            }
+            return new ServiceResult { Success = false, Message = "Match not found" };
+        }
+
+        public async Task<ServiceResult> DeclineMatchAsync(int matchId)
+        {
+            var match = await _matchRepository.GetByIdAsync(matchId);
+            if (match != null)
+            {
+                match.IsAccepted = false;
+                await _matchRepository.UpdateAsync(match);
+                return new ServiceResult { Success = true, Message = "Match declined successfully" };
+            }
+            return new ServiceResult { Success = false, Message = "Match not found" };
+        }
+
+        public Task<IEnumerable<Match>> FindMatchesAsync(int userId, string interest)
+        {
+            throw new NotImplementedException();
         }
     }
 }

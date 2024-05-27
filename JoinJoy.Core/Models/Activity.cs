@@ -9,11 +9,16 @@ namespace JoinJoy.Core.Models
 {
     public class Activity
     {
-        [Key]
-        public int ActivityID { get; set; }
-        public string ActivityName { get; set; }
-        public string Description { get; set; }
-        public string Category { get; set; }
-        public Location Location { get; set; }
+        public int Id { get; set; } // Unique identifier for the activity
+        public string Name { get; set; } // Name of the activity
+        public string Description { get; set; } // Detailed description of the activity
+        public DateTime Date { get; set; } // Date and time when the activity takes place
+        public string Location { get; set; } // Location of the activity
+        public int CreatedById { get; set; } // ID of the user who created the activity
+
+        // Navigation properties
+        public User CreatedBy { get; set; } // Reference to the user who created the activity
+        public ICollection<UserActivity> UserActivities { get; set; } // Many-to-many relationship with users
+        public ICollection<Match> Matches { get; set; } // Collection of matches for the activity
     }
 }

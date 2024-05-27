@@ -26,13 +26,12 @@ namespace JoinJoy.Core.MatchingAlgorithms
         private IEnumerable<User> IdentifyMostInteractedProfiles(User user)
         {
             // Simplified logic for identifying most interacted profiles
-            return new List<User> { new User { UserID = 2 }, new User { UserID = 3 } };
+            return new List<User> { new User { Id = 2 }, new User { Id = 3 } };
         }
 
         private void UpdateUserModel(User user, IEnumerable<string> favoriteActivities, IEnumerable<User> preferredUserProfiles)
         {
             // Simplified logic for updating user model
-            user.Interests += ",Hiking,Swimming";
         }
     }
 }

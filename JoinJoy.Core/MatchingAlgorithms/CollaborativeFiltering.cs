@@ -26,7 +26,8 @@ namespace JoinJoy.Core.MatchingAlgorithms
         private double CalculateSimilarity(User currentUser, User user)
         {
             // Simplified similarity calculation
-            return currentUser.Interests.Intersect(user.Interests).Count() / (double)currentUser.Interests.Count();
+            // return currentUser.Interests.Intersect(user.Interests).Count() / (double)currentUser.Interests.Count();
+            return 0;
         }
     }
 }
