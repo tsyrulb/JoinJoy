@@ -7,13 +7,10 @@
         public string Email { get; set; }
         public string Password { get; set; }
         public string ProfilePhoto { get; set; }
+        public DateTime DateOfBirth { get; set; } // User's date of birth
         public bool IsAdmin { get; set; }
         public Location Location { get; set; }
-
-        // New properties for detailed data points
-        public ICollection<UserInterest> UserInterests { get; set; }
-        public ICollection<UserHobby> UserHobbies { get; set; }
-        public ICollection<UserActivityPreference> UserActivityPreferences { get; set; }
+        public ICollection<UserSubcategory> UserSubcategories { get; set; } // Many-to-many relationship with subcategories
         public ICollection<UserPreferredDestination> UserPreferredDestinations { get; set; }
         public ICollection<UserAvailability> UserAvailabilities { get; set; }
         public double DistanceWillingToTravel { get; set; }

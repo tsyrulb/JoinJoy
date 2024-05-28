@@ -23,11 +23,11 @@ namespace JoinJoy.Infrastructure.Services
 
         public async Task<ServiceResult> LoginAsync(string email, string password)
         {
-            var user = await _userRepository.GetByEmailAsync(email);
-            if (user != null && user.Password == password)
-            {
-                return new ServiceResult { Success = true, Message = "User logged in successfully" };
-            }
+            //var user = await _userRepository.GetByEmailAsync(email);
+            //if (user != null && user.Password == password)
+            //{
+              //  return new ServiceResult { Success = true, Message = "User logged in successfully" };
+            //}
             return new ServiceResult { Success = false, Message = "Invalid credentials" };
         }
 

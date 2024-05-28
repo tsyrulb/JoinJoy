@@ -60,9 +60,10 @@ namespace JoinJoy.Infrastructure.Data.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public Task UpdateAsync(TEntity entity)
+        public async Task UpdateAsync(TEntity entity)
         {
-            throw new NotImplementedException();
+            _context.Set<TEntity>().Update(entity);
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -21,29 +21,27 @@ namespace JoinJoy.WebApi
 
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add DbContext configuration
+            // Add DbContext with migrations assembly specified
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
+                    b => b.MigrationsAssembly("JoinJoy.Infrastructure")));
 
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             // Add repositories
             services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IInterestRepository, InterestRepository>();
-            services.AddScoped<IHobbyRepository, HobbyRepository>();
-            services.AddScoped<IActivityPreferenceRepository, ActivityPreferenceRepository>();
             services.AddScoped<IPreferredDestinationRepository, PreferredDestinationRepository>();
             services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<ISubcategoryRepository, SubcategoryRepository>();
             // Add other repositories...
 
             // Add application services
             services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IInterestService, InterestService>();
-            services.AddScoped<IHobbyService, HobbyService>();
-            services.AddScoped<IActivityPreferenceService, ActivityPreferenceService>();
             services.AddScoped<IPreferredDestinationService, PreferredDestinationService>();
             services.AddScoped<IAvailabilityService, AvailabilityService>();
-
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<ISubcategoryService, SubcategoryService>();
             services.AddControllers();
 
             // Add SignalR
@@ -56,7 +54,7 @@ namespace JoinJoy.WebApi
             });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationDbContext context)
         {
             if (env.IsDevelopment())
             {
@@ -89,6 +87,8 @@ namespace JoinJoy.WebApi
                 endpoints.MapControllers();
                 endpoints.MapHub<ChatHub>("/chathub");
             });
+            // Seed the database
+            DatabaseSeeder.SeedAsync(context).Wait();
         }
     }
 }

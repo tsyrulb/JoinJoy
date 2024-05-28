@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 
 namespace JoinJoy.Core.Models
 {
-    public class UserHobby
+    public class UserSubcategory
     {
         public int UserId { get; set; }
         public User User { get; set; }
-        public int HobbyId { get; set; }
-        public Hobby Hobby { get; set; }
-        public int Weight { get; set; } // User-defined weight for ranking
+        public int SubcategoryId { get; set; }
+        public Subcategory Subcategory { get; set; }
     }
 }

@@ -6,7 +6,9 @@ namespace JoinJoy.Core.Interfaces
 {
     public interface IUserRepository : IRepository<User>
     {
-        Task<User> GetByEmailAsync(string email);
-        Task<IEnumerable<User>> GetUsersWithInterestsAsync();
+        Task<User> GetUserWithSubcategoriesAsync(int userId);
+        Task<IEnumerable<UserSubcategory>> GetUserSubcategoriesAsync(int userId);
+        Task AddUserSubcategoryAsync(UserSubcategory userSubcategory);
+        Task RemoveUserSubcategoryAsync(UserSubcategory userSubcategory);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,58 +9,38 @@ namespace JoinJoy.Infrastructure.Data.Repositories
 {
     public class UserRepository : Repository<User>, IUserRepository
     {
-        private readonly ApplicationDbContext _context;
-
         public UserRepository(ApplicationDbContext context) : base(context)
         {
-            _context = context;
         }
 
-        // Example of a custom method to get a user by email
-        public async Task<User> GetByEmailAsync(string email)
+        private ApplicationDbContext ApplicationDbContext => _context as ApplicationDbContext;
+
+        public async Task<User> GetUserWithSubcategoriesAsync(int userId)
         {
-            return await _context.Users
-                .Include(u => u.UserInterests)
-                .ThenInclude(ui => ui.Interest)
-                .Include(u => u.UserHobbies)
-                .ThenInclude(uh => uh.Hobby)
-                .Include(u => u.UserActivityPreferences)
-                .ThenInclude(uap => uap.ActivityPreference)
-                .Include(u => u.UserPreferredDestinations)
-                .ThenInclude(upd => upd.PreferredDestination)
-                .Include(u => u.UserAvailabilities)
-                .ThenInclude(ua => ua.Availability)
-                .FirstOrDefaultAsync(u => u.Email == email);
+            return await ApplicationDbContext.Users
+                .Include(u => u.UserSubcategories)
+                .ThenInclude(us => us.Subcategory)
+                .SingleOrDefaultAsync(u => u.Id == userId);
         }
 
-        public Task<IEnumerable<User>> GetUsersWithInterestsAsync()
+        public async Task<IEnumerable<UserSubcategory>> GetUserSubcategoriesAsync(int userId)
         {
-            throw new NotImplementedException();
+            return await ApplicationDbContext.UserSubcategories
+                .Where(us => us.UserId == userId)
+                .Include(us => us.Subcategory)
+                .ToListAsync();
         }
 
-        // Example of a custom method to get a user with all related data
-        public async Task<User> GetWithDetailsAsync(int userId)
+        public async Task AddUserSubcategoryAsync(UserSubcategory userSubcategory)
         {
-            return await _context.Users
-                .Include(u => u.UserInterests)
-                .ThenInclude(ui => ui.Interest)
-                .Include(u => u.UserHobbies)
-                .ThenInclude(uh => uh.Hobby)
-                .Include(u => u.UserActivityPreferences)
-                .ThenInclude(uap => uap.ActivityPreference)
-                .Include(u => u.UserPreferredDestinations)
-                .ThenInclude(upd => upd.PreferredDestination)
-                .Include(u => u.UserAvailabilities)
-                .ThenInclude(ua => ua.Availability)
-                .Include(u => u.UserActivities)
-                .Include(u => u.Matches)
-                .Include(u => u.SentMessages)
-                .Include(u => u.ReceivedMessages)
-                .Include(u => u.Feedbacks)
-                .Include(u => u.CreatedActivities)
-                .Include(u => u.SentChatMessages)
-                .Include(u => u.ReceivedChatMessages)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+            await ApplicationDbContext.UserSubcategories.AddAsync(userSubcategory);
+            await ApplicationDbContext.SaveChangesAsync();
+        }
+
+        public async Task RemoveUserSubcategoryAsync(UserSubcategory userSubcategory)
+        {
+            ApplicationDbContext.UserSubcategories.Remove(userSubcategory);
+            await ApplicationDbContext.SaveChangesAsync();
         }
     }
 }
