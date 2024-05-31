@@ -87,8 +87,12 @@ namespace JoinJoy.WebApi
                 endpoints.MapControllers();
                 endpoints.MapHub<ChatHub>("/chathub");
             });
-            // Seed the database
-            DatabaseSeeder.SeedAsync(context).Wait();
+            // Ensure the database is seeded
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
+                var _context = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                DatabaseSeeder.SeedAsync(context).Wait();
+            }
         }
     }
 }

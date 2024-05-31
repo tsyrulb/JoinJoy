@@ -413,6 +413,9 @@ namespace JoinJoy.Infrastructure.Migrations
                     b.Property<int>("SubcategoryId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Weight")
+                        .HasColumnType("int");
+
                     b.HasKey("UserId", "SubcategoryId");
 
                     b.HasIndex("SubcategoryId");

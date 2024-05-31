@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JoinJoy.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240528155941_RevertAddUserSubcategories")]
-    partial class RevertAddUserSubcategories
+    [Migration("20240531172829_UpdateSeedData")]
+    partial class UpdateSeedData
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -414,6 +414,9 @@ namespace JoinJoy.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("SubcategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Weight")
                         .HasColumnType("int");
 
                     b.HasKey("UserId", "SubcategoryId");

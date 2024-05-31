@@ -12,5 +12,7 @@ namespace JoinJoy.Core.Models
         public User User { get; set; }
         public int SubcategoryId { get; set; }
         public Subcategory Subcategory { get; set; }
+        public int Weight { get; set; } // User-defined weight for ranking
+
     }
 }

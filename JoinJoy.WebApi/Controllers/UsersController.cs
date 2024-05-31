@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using JoinJoy.Core.Services;
-using JoinJoy.Core.Models;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using JoinJoy.Core.Models;
+using JoinJoy.Core.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace JoinJoy.WebApi.Controllers
 {
@@ -17,36 +18,117 @@ namespace JoinJoy.WebApi.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(User user)
+        public async Task<IActionResult> RegisterUser([FromBody] User user)
         {
             var result = await _userService.RegisterUserAsync(user);
-            if (result.Success)
+            if (!result.Success)
             {
-                return Ok(result);
+                return BadRequest(result.Message);
             }
-            return BadRequest(result);
+            return Ok(result.Message);
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string email, string password)
+        public async Task<IActionResult> Login([FromBody] dynamic loginRequest)
         {
+            string email = loginRequest.email;
+            string password = loginRequest.password;
+
             var result = await _userService.LoginAsync(email, password);
-            if (result.Success)
+            if (!result.Success)
             {
-                return Ok(result);
+                return Unauthorized(result.Message);
             }
-            return Unauthorized(result);
+            return Ok(result.Message);
         }
 
-        [HttpPut("update")]
-        public async Task<IActionResult> Update(User user)
+        [HttpPut("{userId}")]
+        public async Task<IActionResult> UpdateUser(int userId, [FromBody] User user)
         {
-            var result = await _userService.UpdateUserAsync(user);
-            if (result.Success)
+            if (userId != user.Id)
             {
-                return Ok(result);
+                return BadRequest("User ID mismatch");
             }
-            return BadRequest(result);
+
+            var result = await _userService.UpdateUserAsync(user);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<User>>> GetAllUsers()
+        {
+            var users = await _userService.GetAllUsersAsync();
+            return Ok(users);
+        }
+
+        [HttpGet("{userId}")]
+        public async Task<ActionResult<User>> GetUserById(int userId)
+        {
+            var user = await _userService.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+            return Ok(user);
+        }
+
+        [HttpDelete("{userId}")]
+        public async Task<IActionResult> DeleteUser(int userId)
+        {
+            var result = await _userService.DeleteUserAsync(userId);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
+
+        [HttpPost("{userId}/subcategories")]
+        public async Task<IActionResult> AddUserSubcategories(int userId, [FromBody] List<int> subcategoryIds)
+        {
+            var result = await _userService.AddUserSubcategoriesAsync(userId, subcategoryIds);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
+
+        [HttpDelete("{userId}/subcategories/{subcategoryId}")]
+        public async Task<IActionResult> RemoveUserSubcategory(int userId, int subcategoryId)
+        {
+            var result = await _userService.RemoveUserSubcategoryAsync(userId, subcategoryId);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
+
+        [HttpPost("{userId}/preferredDestinations")]
+        public async Task<IActionResult> AddUserPreferredDestinations(int userId, [FromBody] List<UserPreferredDestination> preferredDestinations)
+        {
+            var result = await _userService.AddUserPreferredDestinationsAsync(userId, preferredDestinations);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
+
+        [HttpPost("{userId}/availabilities")]
+        public async Task<IActionResult> AddUserAvailabilities(int userId, [FromBody] List<UserAvailability> availabilities)
+        {
+            var result = await _userService.AddUserAvailabilitiesAsync(userId, availabilities);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
         }
     }
 }

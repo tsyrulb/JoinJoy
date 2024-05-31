@@ -33,6 +33,7 @@ namespace JoinJoy.Infrastructure.Data
 
                 context.Categories.AddRange(categories);
                 await context.SaveChangesAsync();
+
                 // Music subcategories
                 var subcategories = new List<Subcategory>
                 {
@@ -1402,6 +1403,7 @@ namespace JoinJoy.Infrastructure.Data
                     new Subcategory { Name = "ESTP", CategoryId = categories.Single(c => c.Name == "MBTI").Id },
                     new Subcategory { Name = "ESFP", CategoryId = categories.Single(c => c.Name == "MBTI").Id },
                 });
+
                 context.Subcategories.AddRange(subcategories);
                 await context.SaveChangesAsync();
             }
