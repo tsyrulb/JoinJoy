@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using JoinJoy.WebApi.Hubs;
 using JoinJoy.WebApi.Middleware;
 using JoinJoy.Infrastructure.Services;
+using JoinJoy.Core.Models;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace JoinJoy.WebApi
 {
@@ -34,16 +36,29 @@ namespace JoinJoy.WebApi
             services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ISubcategoryRepository, SubcategoryRepository>();
+            services.AddControllers();
+            var googleApiKey = Configuration["GoogleApiKey"];
             // Add other repositories...
 
-            // Add application services
-            services.AddScoped<IUserService, UserService>();
+            // Register UserService with a factory method to provide the API key
+            services.AddScoped<IUserService>(provider =>
+            {
+                var userRepository = provider.GetRequiredService<IRepository<User>>();
+                var userSubcategoryRepository = provider.GetRequiredService<IRepository<UserSubcategory>>();
+                var userPreferredDestinationRepository = provider.GetRequiredService<IRepository<UserPreferredDestination>>();
+                var userAvailabilityRepository = provider.GetRequiredService<IRepository<UserAvailability>>();
+                return new UserService(
+                    userRepository,
+                    userSubcategoryRepository,
+                    userPreferredDestinationRepository,
+                    userAvailabilityRepository,
+                    googleApiKey
+                );
+            });
             services.AddScoped<IPreferredDestinationService, PreferredDestinationService>();
             services.AddScoped<IAvailabilityService, AvailabilityService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();
-            services.AddControllers();
-
             // Add SignalR
             services.AddSignalR();
 
@@ -52,6 +67,9 @@ namespace JoinJoy.WebApi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "JoinJoy API", Version = "v1" });
             });
+
+
+            
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationDbContext context)

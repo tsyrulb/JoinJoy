@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Models;
 using JoinJoy.Core.Services;
@@ -13,17 +16,20 @@ namespace JoinJoy.Infrastructure.Services
         private readonly IRepository<UserSubcategory> _userSubcategoryRepository;
         private readonly IRepository<UserPreferredDestination> _userPreferredDestinationRepository;
         private readonly IRepository<UserAvailability> _userAvailabilityRepository;
-
+        private readonly string _googleApiKey;
         public UserService(
             IRepository<User> userRepository,
             IRepository<UserSubcategory> userSubcategoryRepository,
             IRepository<UserPreferredDestination> userPreferredDestinationRepository,
-            IRepository<UserAvailability> userAvailabilityRepository)
+            IRepository<UserAvailability> userAvailabilityRepository,
+            string googleApiKey
+            )
         {
             _userRepository = userRepository;
             _userSubcategoryRepository = userSubcategoryRepository;
             _userPreferredDestinationRepository = userPreferredDestinationRepository;
             _userAvailabilityRepository = userAvailabilityRepository;
+            _googleApiKey = googleApiKey ?? throw new ArgumentNullException(nameof(googleApiKey));
         }
 
         public async Task<ServiceResult> RegisterUserAsync(User user)
@@ -34,13 +40,117 @@ namespace JoinJoy.Infrastructure.Services
 
         public async Task<ServiceResult> LoginAsync(string email, string password)
         {
-            var user = await _userRepository.FindAsync(u => u.Email == email && u.Password == password);
+            var userList = await _userRepository.FindAsync(u => u.Email == email && u.Password == password);
+            var user = userList.FirstOrDefault();
+
             if (user == null)
             {
+                Console.WriteLine("Invalid email or password");
                 return new ServiceResult { Success = false, Message = "Invalid email or password" };
             }
-
+            Console.WriteLine("User logged in successfully");
             return new ServiceResult { Success = true, Message = "User logged in successfully" };
+        }
+
+        public async Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return new ServiceResult { Success = false, Message = "User not found" };
+            }
+
+            // Update user properties if new values are provided
+            if (!string.IsNullOrEmpty(name))
+            {
+                user.Name = name;
+            }
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                user.Email = email;
+            }
+
+            if (!string.IsNullOrEmpty(password))
+            {
+                user.Password = password; // Ensure password is hashed
+            }
+
+            if (!string.IsNullOrEmpty(profilePhoto))
+            {
+                user.ProfilePhoto = profilePhoto;
+            }
+
+            if (dateOfBirth.HasValue)
+            {
+                user.DateOfBirth = dateOfBirth.Value;
+            }
+
+            if (!string.IsNullOrEmpty(address))
+            {
+                try
+                {
+                    var (latitude, longitude) = await GetCoordinatesAsync(address);
+                    user.Location = new Location
+                    {
+                        Latitude = latitude,
+                        Longitude = longitude,
+                        Address = address,
+                        PlaceId = "" // Optional: fetch and store PlaceId if needed
+                    };
+                }
+                catch (Exception)
+                {
+                    return new ServiceResult { Success = false, Message = "Failed to fetch coordinates for the provided address" };
+                }
+            }
+
+            await _userRepository.UpdateAsync(user);
+
+            return new ServiceResult { Success = true, Message = "User details updated successfully" };
+        }
+
+        // write method that update string bio in user         // write method that update string bio in user  table
+        public async Task<ServiceResult> UpdateUserDetailsAsync(int userId, string bio)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return new ServiceResult { Success = false, Message = "User not found" };
+            }
+            // Update user properties if new values are provided
+            if (!string.IsNullOrEmpty(bio))
+            {
+                user.Bio = bio;
+            }
+            await _userRepository.UpdateAsync(user);
+            return new ServiceResult { Success = true, Message = "User details updated successfully" };
+        } 
+        private async Task<(double latitude, double longitude)> GetCoordinatesAsync(string address)
+        {
+            string requestUri = string.Format("https://maps.googleapis.com/maps/api/geocode/xml?address={0}&key={1}&sensor=false", Uri.EscapeDataString(address), _googleApiKey);
+
+            try
+            {
+                WebRequest request = WebRequest.Create(requestUri);
+                WebResponse response = await request.GetResponseAsync();
+
+                XDocument xdoc = XDocument.Load(response.GetResponseStream());
+
+                XElement result = xdoc.Element("GeocodeResponse").Element("result");
+                XElement locationElement = result.Element("geometry").Element("location");
+                XElement lat = locationElement.Element("lat");
+                XElement lng = locationElement.Element("lng");
+
+                double latitude = double.Parse(lat.Value);
+                double longitude = double.Parse(lng.Value);
+
+                return (latitude, longitude);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         public async Task<ServiceResult> UpdateUserAsync(User user)
@@ -134,6 +244,11 @@ namespace JoinJoy.Infrastructure.Services
             }
 
             return new ServiceResult { Success = true, Message = "User availabilities added successfully" };
+        }
+
+        public Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, Location? location)
+        {
+            throw new NotImplementedException();
         }
     }
 }

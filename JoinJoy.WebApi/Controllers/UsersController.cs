@@ -18,8 +18,14 @@ namespace JoinJoy.WebApi.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> RegisterUser([FromBody] User user)
+        public async Task<IActionResult> RegisterUser(string name, string email, string password)
         {
+            var user = new User
+            {
+                Name = name,
+                Email = email,
+                Password = password,
+            };
             var result = await _userService.RegisterUserAsync(user);
             if (!result.Success)
             {
@@ -29,11 +35,8 @@ namespace JoinJoy.WebApi.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] dynamic loginRequest)
+        public async Task<IActionResult> Login(string email, string password)
         {
-            string email = loginRequest.email;
-            string password = loginRequest.password;
-
             var result = await _userService.LoginAsync(email, password);
             if (!result.Success)
             {
@@ -42,21 +45,17 @@ namespace JoinJoy.WebApi.Controllers
             return Ok(result.Message);
         }
 
-        [HttpPut("{userId}")]
-        public async Task<IActionResult> UpdateUser(int userId, [FromBody] User user)
+        [HttpPut("{userId}/details")]
+        public async Task<IActionResult> UpdateUserDetails(int userId, [FromBody] UpdateUserRequest updateUserRequest)
         {
-            if (userId != user.Id)
-            {
-                return BadRequest("User ID mismatch");
-            }
-
-            var result = await _userService.UpdateUserAsync(user);
+            var result = await _userService.UpdateUserDetailsAsync(userId, updateUserRequest.Name, updateUserRequest.Email, updateUserRequest.Password, updateUserRequest.ProfilePhoto, updateUserRequest.DateOfBirth, updateUserRequest.Address);
             if (!result.Success)
             {
                 return BadRequest(result.Message);
             }
             return Ok(result.Message);
         }
+
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetAllUsers()

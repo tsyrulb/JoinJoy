@@ -4,6 +4,7 @@ using JoinJoy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JoinJoy.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240604164059_UpdatedUsersMigration")]
+    partial class UpdatedUsersMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,6 +49,9 @@ namespace JoinJoy.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -54,6 +60,8 @@ namespace JoinJoy.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedById");
+
+                    b.HasIndex("LocationId");
 
                     b.ToTable("Activities");
                 });
@@ -180,14 +188,11 @@ namespace JoinJoy.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("Latitude")
+                    b.Property<double>("Latitude")
                         .HasColumnType("float");
 
-                    b.Property<double?>("Longitude")
+                    b.Property<double>("Longitude")
                         .HasColumnType("float");
-
-                    b.Property<string>("PlaceId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -428,6 +433,10 @@ namespace JoinJoy.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("JoinJoy.Core.Models.Location", null)
+                        .WithMany("Activities")
+                        .HasForeignKey("LocationId");
+
                     b.Navigation("CreatedBy");
                 });
 
@@ -626,6 +635,11 @@ namespace JoinJoy.Infrastructure.Migrations
             modelBuilder.Entity("JoinJoy.Core.Models.Category", b =>
                 {
                     b.Navigation("Subcategories");
+                });
+
+            modelBuilder.Entity("JoinJoy.Core.Models.Location", b =>
+                {
+                    b.Navigation("Activities");
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.PreferredDestination", b =>

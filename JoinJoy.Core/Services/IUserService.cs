@@ -16,5 +16,7 @@ namespace JoinJoy.Core.Services
         Task<ServiceResult> RemoveUserSubcategoryAsync(int userId, int subcategoryId);
         Task<ServiceResult> AddUserPreferredDestinationsAsync(int userId, List<UserPreferredDestination> preferredDestinations);
         Task<ServiceResult> AddUserAvailabilitiesAsync(int userId, List<UserAvailability> availabilities);
+        Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, Location? location);
+        Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address);
     }
 }
