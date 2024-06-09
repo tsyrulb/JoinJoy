@@ -110,7 +110,8 @@ namespace JoinJoy.Infrastructure.Services
             return new ServiceResult { Success = true, Message = "User details updated successfully" };
         }
 
-        // write method that update string bio in user         // write method that update string bio in user  table
+        //TODO: Implement this method
+        // write method that update string bio in user         
         public async Task<ServiceResult> UpdateUserDetailsAsync(int userId, string bio)
         {
             var user = await _userRepository.GetByIdAsync(userId);
@@ -121,7 +122,7 @@ namespace JoinJoy.Infrastructure.Services
             // Update user properties if new values are provided
             if (!string.IsNullOrEmpty(bio))
             {
-                user.Bio = bio;
+            //    user.Bio = bio;
             }
             await _userRepository.UpdateAsync(user);
             return new ServiceResult { Success = true, Message = "User details updated successfully" };
@@ -181,7 +182,7 @@ namespace JoinJoy.Infrastructure.Services
             return new ServiceResult { Success = true, Message = "User deleted successfully" };
         }
 
-        public async Task<ServiceResult> AddUserSubcategoriesAsync(int userId, List<int> subcategoryIds)
+        public async Task<ServiceResult> AddUserSubcategoriesAsync(int userId, List<UserSubcategoryDto> subcategoryIds)
         {
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
@@ -189,9 +190,14 @@ namespace JoinJoy.Infrastructure.Services
                 return new ServiceResult { Success = false, Message = "User not found" };
             }
 
-            foreach (var subcategoryId in subcategoryIds)
+            foreach (var userSubcategoryDto in subcategoryIds)
             {
-                var userSubcategory = new UserSubcategory { UserId = userId, SubcategoryId = subcategoryId };
+                var userSubcategory = new UserSubcategory
+                {
+                    UserId = userId,
+                    SubcategoryId = userSubcategoryDto.SubcategoryId,
+                    Weight = userSubcategoryDto.Weight
+                };
                 await _userSubcategoryRepository.AddAsync(userSubcategory);
             }
 
@@ -249,6 +255,25 @@ namespace JoinJoy.Infrastructure.Services
         public Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, Location? location)
         {
             throw new NotImplementedException();
+        }
+
+        public Task<ServiceResult> AddUserSubcategoriesAsync(int userId, List<int> subcategoryIds)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<ServiceResult> UpdateUserDistanceWillingToTravelAsync(int userId, double distance)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return new ServiceResult { Success = false, Message = "User not found" };
+            }
+
+            user.DistanceWillingToTravel = distance;
+            await _userRepository.UpdateAsync(user);
+
+            return new ServiceResult { Success = true, Message = "Distance willing to travel updated successfully" };
         }
     }
 }

@@ -10,7 +10,6 @@
         public DateTime? DateOfBirth { get; set; } // User's date of birth
         public bool? IsAdmin { get; set; }
         public Location? Location { get; set; }
-        public string? Bio { get; set; }
         public ICollection<UserSubcategory>? UserSubcategories { get; set; } // Many-to-many relationship with subcategories
         public ICollection<UserPreferredDestination>? UserPreferredDestinations { get; set; }
         public ICollection<UserAvailability>? UserAvailabilities { get; set; }

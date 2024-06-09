@@ -48,7 +48,13 @@ namespace JoinJoy.WebApi.Controllers
         [HttpPut("{userId}/details")]
         public async Task<IActionResult> UpdateUserDetails(int userId, [FromBody] UpdateUserRequest updateUserRequest)
         {
-            var result = await _userService.UpdateUserDetailsAsync(userId, updateUserRequest.Name, updateUserRequest.Email, updateUserRequest.Password, updateUserRequest.ProfilePhoto, updateUserRequest.DateOfBirth, updateUserRequest.Address);
+            var result = await _userService.UpdateUserDetailsAsync(userId,
+                updateUserRequest.Name,
+                updateUserRequest.Email,
+                updateUserRequest.Password,
+                updateUserRequest.ProfilePhoto,
+                updateUserRequest.DateOfBirth,
+                updateUserRequest.Address);
             if (!result.Success)
             {
                 return BadRequest(result.Message);
@@ -87,8 +93,12 @@ namespace JoinJoy.WebApi.Controllers
         }
 
         [HttpPost("{userId}/subcategories")]
-        public async Task<IActionResult> AddUserSubcategories(int userId, [FromBody] List<int> subcategoryIds)
+        public async Task<IActionResult> AddUserSubcategories(int userId, [FromBody] List<UserSubcategoryDto> subcategoryIds)
         {
+            if (subcategoryIds == null || subcategoryIds.Count == 0)
+            {
+                return BadRequest("Subcategory IDs and weights cannot be null or empty.");
+            }
             var result = await _userService.AddUserSubcategoriesAsync(userId, subcategoryIds);
             if (!result.Success)
             {
@@ -127,6 +137,19 @@ namespace JoinJoy.WebApi.Controllers
             {
                 return BadRequest(result.Message);
             }
+            return Ok(result.Message);
+        }
+
+        [HttpPut("{userId}/distance")]
+        public async Task<IActionResult> UpdateUserDistanceWillingToTravel(int userId, [FromBody] double distance)
+        {
+            var result = await _userService.UpdateUserDistanceWillingToTravelAsync(userId, distance);
+
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+
             return Ok(result.Message);
         }
     }
