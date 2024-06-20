@@ -11,9 +11,11 @@ namespace JoinJoy.Core.Models
     {
         public int Id { get; set; } // Unique identifier for the activity
         public string Name { get; set; } // Name of the activity
-        public string Description { get; set; } // Detailed description of the activity
+        public string? Description { get; set; } // Detailed description of the activity
         public DateTime Date { get; set; } // Date and time when the activity takes place
-        public string Location { get; set; } // Location of the activity
+        public int LocationId { get; set; } // ID of the location
+
+        public Location Location { get; set; } // Location of the activity
         public int CreatedById { get; set; } // ID of the user who created the activity
 
         // Navigation properties

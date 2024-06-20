@@ -8,32 +8,30 @@ namespace JoinJoy.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<Activity> builder)
         {
-            builder.HasKey(a => a.Id);
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Name).IsRequired();
+            builder.Property(e => e.LocationId).IsRequired();
 
-            builder.Property(a => a.Name)
-                   .IsRequired()
-                   .HasMaxLength(100);
-
-            builder.Property(a => a.Description)
-                   .IsRequired()
-                   .HasMaxLength(500);
-
-            builder.Property(a => a.Date)
-                   .IsRequired();
-
-            builder.Property(a => a.Location)
-                   .IsRequired()
-                   .HasMaxLength(200);
-
-            builder.HasOne(a => a.CreatedBy)
-                   .WithMany(u => u.CreatedActivities) // Fix: Use a separate collection for created activities
-                   .HasForeignKey(a => a.CreatedById)
+            builder.HasOne(d => d.CreatedBy)
+                   .WithMany(p => p.CreatedActivities)
+                   .HasForeignKey(d => d.CreatedById)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            // Correctly define the many-to-many relationship between User and Activity
-            builder.HasMany(a => a.UserActivities)
+            builder.HasOne(d => d.Location)
+                   .WithMany(l => l.Activities)
+                   .HasForeignKey(d => d.LocationId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(e => e.UserActivities)
                    .WithOne(ua => ua.Activity)
-                   .HasForeignKey(ua => ua.ActivityId);
+                   .HasForeignKey(ua => ua.ActivityId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(e => e.Matches)
+                   .WithOne(m => m.Activity)
+                   .HasForeignKey(m => m.ActivityId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
+

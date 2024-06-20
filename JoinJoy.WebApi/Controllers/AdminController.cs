@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using JoinJoy.Core.Services;
 using System.Threading.Tasks;
+using JoinJoy.Core.Interfaces;
 
 namespace JoinJoy.WebApi.Controllers
 {
@@ -24,11 +25,12 @@ namespace JoinJoy.WebApi.Controllers
             return Ok(result);
         }
 
+        // TODO::Implement GetActivities method
         [HttpGet("activities")]
         public async Task<IActionResult> GetActivities()
         {
-            var result = await _activityService.GetActivitiesAsync();
-            return Ok(result);
+            //var result = await _activityService.GetActivitiesAsync();
+            return Ok();
         }
 
         [HttpDelete("delete-user")]

@@ -28,19 +28,18 @@ namespace JoinJoy.WebApi
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
                     b => b.MigrationsAssembly("JoinJoy.Infrastructure")));
 
+            var googleApiKey = Configuration["GoogleApiKey"];
+
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            // Add repositories
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IPreferredDestinationRepository, PreferredDestinationRepository>();
             services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ISubcategoryRepository, SubcategoryRepository>();
-            services.AddControllers();
-            var googleApiKey = Configuration["GoogleApiKey"];
-            // Add other repositories...
-
-            // Register UserService with a factory method to provide the API key
+            services.AddScoped<ILocationRepository, LocationRepository>(); // Ensure LocationRepository is registered
+            services.AddScoped<IUserActivityRepository, UserActivityRepository>();
+            // Register services
             services.AddScoped<IUserService>(provider =>
             {
                 var userRepository = provider.GetRequiredService<IRepository<User>>();
@@ -55,10 +54,29 @@ namespace JoinJoy.WebApi
                     googleApiKey
                 );
             });
+
+            services.AddScoped<IActivityService>(provider =>
+            {
+                var activityRepository = provider.GetRequiredService<IRepository<Activity>>();
+                var locationRepository = provider.GetRequiredService<IRepository<Location>>();
+                var userRepository = provider.GetRequiredService<IUserRepository>();
+                var userActivityRepository = provider.GetRequiredService<IRepository<UserActivity>>();
+                var customLocationRepository = provider.GetRequiredService<ILocationRepository>();
+                return new ActivityService(
+                    activityRepository,
+                    locationRepository,
+                    userRepository,
+                    userActivityRepository,
+                    customLocationRepository,
+                    googleApiKey
+                );
+            });
+
             services.AddScoped<IPreferredDestinationService, PreferredDestinationService>();
             services.AddScoped<IAvailabilityService, AvailabilityService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();
+
             // Add SignalR
             services.AddSignalR();
 
@@ -68,8 +86,7 @@ namespace JoinJoy.WebApi
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "JoinJoy API", Version = "v1" });
             });
 
-
-            
+            services.AddControllers();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationDbContext context)
@@ -105,6 +122,7 @@ namespace JoinJoy.WebApi
                 endpoints.MapControllers();
                 endpoints.MapHub<ChatHub>("/chathub");
             });
+
             // Ensure the database is seeded
             using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {

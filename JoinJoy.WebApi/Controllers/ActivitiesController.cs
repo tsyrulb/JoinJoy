@@ -1,12 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using JoinJoy.Core.Services;
+﻿using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Models;
+using JoinJoy.Core.Services;
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace JoinJoy.WebApi.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class ActivitiesController : ControllerBase
     {
         private readonly IActivityService _activityService;
@@ -16,22 +18,69 @@ namespace JoinJoy.WebApi.Controllers
             _activityService = activityService;
         }
 
-        [HttpPost("create")]
-        public async Task<IActionResult> Create(Activity activity)
+        [HttpPost]
+        public async Task<IActionResult> CreateActivity([FromBody] ActivityRequest activityRequest)
         {
-            var result = await _activityService.CreateActivityAsync(activity);
-            if (result.Success)
+            var result = await _activityService.CreateActivityAsync(activityRequest);
+            if (!result.Success)
             {
-                return Ok(result);
+                return BadRequest(result.Message);
             }
-            return BadRequest(result);
+
+            return Ok(result.Message);
         }
 
-        [HttpGet("list")]
-        public async Task<IActionResult> List()
+        [HttpPut("{activityId}")]
+        public async Task<IActionResult> UpdateActivity(int activityId, [FromBody] ActivityRequest activityRequest)
         {
-            var result = await _activityService.GetActivitiesAsync();
-            return Ok(result);
+            var result = await _activityService.UpdateActivityAsync(activityId, activityRequest);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+
+            return Ok(result.Message);
+        }
+
+        [HttpDelete("{activityId}")]
+        public async Task<IActionResult> DeleteActivity(int activityId)
+        {
+            var result = await _activityService.DeleteActivityAsync(activityId);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+
+            return Ok(result.Message);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Activity>>> GetAllActivities()
+        {
+            var activities = await _activityService.GetAllActivitiesAsync();
+            return Ok(activities);
+        }
+
+        [HttpGet("{activityId}")]
+        public async Task<ActionResult<Activity>> GetActivityById(int activityId)
+        {
+            var activity = await _activityService.GetActivityByIdAsync(activityId);
+            if (activity == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(activity);
+        }
+        [HttpPost("{activityId}/addUsers")]
+        public async Task<IActionResult> AddUsersToActivity(int activityId, [FromBody] List<int> userIds)
+        {
+            var result = await _activityService.AddUsersToActivityAsync(activityId, userIds);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
         }
     }
 }

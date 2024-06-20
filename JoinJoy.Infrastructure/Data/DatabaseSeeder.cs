@@ -13,6 +13,7 @@ namespace JoinJoy.Infrastructure.Data
         {
             if (!context.Categories.Any())
             {
+                
                 var categories = new List<Category>
                 {
                     new Category { Name = "Music" },

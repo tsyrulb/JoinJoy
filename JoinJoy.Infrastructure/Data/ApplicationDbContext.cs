@@ -52,7 +52,7 @@ namespace JoinJoy.Infrastructure.Data
                 .WithMany(a => a.UserActivities)
                 .HasForeignKey(ua => ua.ActivityId);
 
-              modelBuilder.Entity<UserPreferredDestination>()
+            modelBuilder.Entity<UserPreferredDestination>()
                 .HasKey(upd => new { upd.UserId, upd.PreferredDestinationId });
 
             modelBuilder.Entity<UserPreferredDestination>()
@@ -77,7 +77,7 @@ namespace JoinJoy.Infrastructure.Data
                 .HasOne(ua => ua.Availability)
                 .WithMany(a => a.UserAvailabilities)
                 .HasForeignKey(ua => ua.AvailabilityId);
-            // Define relationships
+
             modelBuilder.Entity<UserSubcategory>()
                 .HasKey(us => new { us.UserId, us.SubcategoryId });
 

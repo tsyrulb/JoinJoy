@@ -16,7 +16,7 @@ namespace JoinJoy.Core.Models
         public string? PlaceId { get; set; } // Google Place ID for precise location identification
 
         // Navigation properties
-        // public ICollection<Activity> Activities { get; set; } // Collection of activities at this location
+        public ICollection<Activity> Activities { get; set; } // Collection of activities at this location
 
     }
 }
