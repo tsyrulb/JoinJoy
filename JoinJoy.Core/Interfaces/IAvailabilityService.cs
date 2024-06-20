@@ -6,10 +6,10 @@ namespace JoinJoy.Core.Interfaces
 {
     public interface IAvailabilityService
     {
-        Task<IEnumerable<Availability>> GetAllAvailabilitiesAsync();
-        Task<Availability> GetAvailabilityByIdAsync(int id);
-        Task<ServiceResult> AddAvailabilityAsync(Availability availability);
-        Task<ServiceResult> UpdateAvailabilityAsync(Availability availability);
-        Task<ServiceResult> DeleteAvailabilityAsync(int id);
+        Task<ServiceResult> AddOrUpdateAvailabilityAsync(int userId, List<AvailabilityRequest> availabilityRequests);
+        Task<ServiceResult> DeleteAvailabilityAsync(int userId, int availabilityId);
+        Task<IEnumerable<Availability>> GetUserAvailabilitiesAsync(int userId);
+        Task<ServiceResult> CreateAvailabilityAsync(int userId, AvailabilityRequest availabilityRequest);
+        Task<ServiceResult> UpdateAvailabilityAsync(int userId, AvailabilityRequest availabilityRequest);
     }
 }

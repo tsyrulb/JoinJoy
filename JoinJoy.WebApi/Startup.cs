@@ -29,7 +29,7 @@ namespace JoinJoy.WebApi
                     b => b.MigrationsAssembly("JoinJoy.Infrastructure")));
 
             var googleApiKey = Configuration["GoogleApiKey"];
-
+            var huggingFaceApiKey = Configuration["HuggingFaceApiKey"];
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IUserRepository, UserRepository>();
@@ -71,7 +71,24 @@ namespace JoinJoy.WebApi
                     googleApiKey
                 );
             });
-
+            services.AddScoped<IAvailabilityService, AvailabilityService>();
+            services.AddScoped<IRepository<Availability>, Repository<Availability>>();
+            services.AddScoped<IRepository<UserAvailability>, Repository<UserAvailability>>();
+            // Register AIChatService with HttpClient
+            services.AddHttpClient<IAIChatService, AIChatService>(client =>
+            {
+                client.BaseAddress = new Uri("https://api-inference.huggingface.co/models/microsoft/phi-1_5");
+            }).ConfigurePrimaryHttpMessageHandler(() =>
+            {
+                return new HttpClientHandler
+                {
+                    AutomaticDecompression = System.Net.DecompressionMethods.GZip
+                };
+            });
+            services.AddHttpClient<FlaskApiService>(client =>
+            {
+                client.BaseAddress = new Uri("http://localhost:5000"); // Flask API base address
+            });
             services.AddScoped<IPreferredDestinationService, PreferredDestinationService>();
             services.AddScoped<IAvailabilityService, AvailabilityService>();
             services.AddScoped<ICategoryService, CategoryService>();
