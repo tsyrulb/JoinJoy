@@ -23,6 +23,8 @@ namespace JoinJoy.Infrastructure.Services
         {
             foreach (var request in availabilityRequests)
             {
+                var startTime = TimeSpan.Parse(request.StartTime);
+                var endTime = TimeSpan.Parse(request.EndTime);
                 if (request.Id.HasValue)
                 {
                     // Update existing availability
@@ -30,8 +32,8 @@ namespace JoinJoy.Infrastructure.Services
                     if (existingAvailability != null)
                     {
                         existingAvailability.DayOfWeek = request.DayOfWeek;
-                        existingAvailability.StartTime = request.StartTime;
-                        existingAvailability.EndTime = request.EndTime;
+                        existingAvailability.StartTime = startTime;
+                        existingAvailability.EndTime = endTime;
                         await _availabilityRepository.UpdateAsync(existingAvailability);
                     }
                 }
@@ -41,8 +43,8 @@ namespace JoinJoy.Infrastructure.Services
                     var newAvailability = new Availability
                     {
                         DayOfWeek = request.DayOfWeek,
-                        StartTime = request.StartTime,
-                        EndTime = request.EndTime
+                        StartTime = startTime,
+                        EndTime = endTime
                     };
                     await _availabilityRepository.AddAsync(newAvailability);
 
@@ -60,11 +62,13 @@ namespace JoinJoy.Infrastructure.Services
 
         public async Task<ServiceResult> CreateAvailabilityAsync(int userId, AvailabilityRequest availabilityRequest)
         {
+            var startTime = TimeSpan.Parse(availabilityRequest.StartTime);
+            var endTime = TimeSpan.Parse(availabilityRequest.EndTime);
             var newAvailability = new Availability
             {
                 DayOfWeek = availabilityRequest.DayOfWeek,
-                StartTime = availabilityRequest.StartTime,
-                EndTime = availabilityRequest.EndTime
+                StartTime = startTime,
+                EndTime = endTime
             };
             await _availabilityRepository.AddAsync(newAvailability);
 
@@ -91,9 +95,12 @@ namespace JoinJoy.Infrastructure.Services
                 return new ServiceResult { Success = false, Message = "Availability not found" };
             }
 
+            var startTime = TimeSpan.Parse(availabilityRequest.StartTime);
+            var endTime = TimeSpan.Parse(availabilityRequest.EndTime);
+
             existingAvailability.DayOfWeek = availabilityRequest.DayOfWeek;
-            existingAvailability.StartTime = availabilityRequest.StartTime;
-            existingAvailability.EndTime = availabilityRequest.EndTime;
+            existingAvailability.StartTime = startTime;
+            existingAvailability.EndTime = endTime;
             await _availabilityRepository.UpdateAsync(existingAvailability);
 
             return new ServiceResult { Success = true, Message = "Availability updated successfully" };

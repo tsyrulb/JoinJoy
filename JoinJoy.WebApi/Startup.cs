@@ -9,6 +9,7 @@ using JoinJoy.WebApi.Middleware;
 using JoinJoy.Infrastructure.Services;
 using JoinJoy.Core.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 
 namespace JoinJoy.WebApi
 {
@@ -103,7 +104,11 @@ namespace JoinJoy.WebApi
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "JoinJoy API", Version = "v1" });
             });
 
-            services.AddControllers();
+            services.AddControllers()
+                    .AddNewtonsoftJson(options =>
+                    {
+                        options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                    });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationDbContext context)
