@@ -19,10 +19,14 @@ namespace JoinJoy.Infrastructure.Data
         public DbSet<UserAvailability> UserAvailabilities { get; set; }
         public DbSet<Match> Matches { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<UserConversation> UserConversations { get; set; }
+
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Category> Categories { get; set; }
+
         public DbSet<Subcategory> Subcategories { get; set; }
         public DbSet<UserSubcategory> UserSubcategories { get; set; }
 
@@ -95,6 +99,26 @@ namespace JoinJoy.Infrastructure.Data
                 .HasOne(sc => sc.Category)
                 .WithMany(c => c.Subcategories)
                 .HasForeignKey(sc => sc.CategoryId);
+
+            // Many-to-many relationship between Users and Conversations
+            modelBuilder.Entity<UserConversation>()
+                .HasKey(uc => new { uc.UserId, uc.ConversationId });
+
+            modelBuilder.Entity<UserConversation>()
+                .HasOne(uc => uc.User)
+                .WithMany(u => u.UserConversations)
+                .HasForeignKey(uc => uc.UserId);
+
+            modelBuilder.Entity<UserConversation>()
+                .HasOne(uc => uc.Conversation)
+                .WithMany(c => c.Participants)
+                .HasForeignKey(uc => uc.ConversationId);
+
+            // Message relation to conversation
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ConversationId);
         }
     }
 }

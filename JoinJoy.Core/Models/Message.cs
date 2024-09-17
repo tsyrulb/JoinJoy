@@ -1,24 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using JoinJoy.Core.Models;
 
-namespace JoinJoy.Core.Models
+public class Message
 {
-    public class Message
-    {
-        public int Id { get; set; } // Unique identifier for the message
-        public int SenderId { get; set; } // ID of the user who sent the message
-        public int ReceiverId { get; set; } // ID of the user who received the message
-        public string Content { get; set; } // Content of the message
-        public DateTime Timestamp { get; set; } // Time when the message was sent
-        public bool IsRead { get; set; } // Flag indicating if the message has been read
+    public int Id { get; set; }
+    public int SenderId { get; set; }
+    public int ReceiverId { get; set; }  // ReceiverId can be null if it's a group chat.
+    public int ConversationId { get; set; } // Ties the message to a conversation
+    public string Content { get; set; }
+    public DateTime Timestamp { get; set; }
+    public bool IsRead { get; set; }
 
-        // Navigation properties
-        public User Sender { get; set; } // Reference to the sender user
-        public User Receiver { get; set; } // Reference to the receiver user
-    }
+    // Navigation properties
+    public User Sender { get; set; }
+    public User Receiver { get; set; }
+    public Conversation Conversation { get; set; }
 }

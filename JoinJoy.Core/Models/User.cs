@@ -20,6 +20,9 @@
         public ICollection<Match>? Matches { get; set; }
         public ICollection<Message>? SentMessages { get; set; } // Sent messages
         public ICollection<Message>? ReceivedMessages { get; set; } // Received messages
+
+        public ICollection<UserConversation>? UserConversations { get; set; } // Received messages
+
         public ICollection<Feedback>? Feedbacks { get; set; }
         public ICollection<Activity>? CreatedActivities { get; set; } // Added this line
 

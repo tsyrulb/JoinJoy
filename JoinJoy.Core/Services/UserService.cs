@@ -182,6 +182,9 @@ namespace JoinJoy.Infrastructure.Services
             return new ServiceResult { Success = true, Message = "User deleted successfully" };
         }
 
+        //public async Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId);
+       
+
         public async Task<ServiceResult> AddUserSubcategoriesAsync(int userId, List<UserSubcategoryDto> subcategoryIds)
         {
             var user = await _userRepository.GetByIdAsync(userId);
@@ -200,7 +203,7 @@ namespace JoinJoy.Infrastructure.Services
                 };
                 await _userSubcategoryRepository.AddAsync(userSubcategory);
             }
-
+            
             return new ServiceResult { Success = true, Message = "User subcategories added successfully" };
         }
 
@@ -274,6 +277,11 @@ namespace JoinJoy.Infrastructure.Services
             await _userRepository.UpdateAsync(user);
 
             return new ServiceResult { Success = true, Message = "Distance willing to travel updated successfully" };
+        }
+
+        public Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

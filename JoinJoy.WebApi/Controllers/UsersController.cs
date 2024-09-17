@@ -118,6 +118,17 @@ namespace JoinJoy.WebApi.Controllers
             return Ok(result.Message);
         }
 
+        [HttpGet("{userId}/subcategories")]
+        public async Task<ActionResult<UserSubcategory>> GeteUserSubcategory(int userId)
+        {
+            var result = await _userService.GetSubcategoriesByUserIdAsync(userId);
+            if (result != null)
+            {
+                return BadRequest();
+            }
+            return Ok(result);
+        }
+
         [HttpPost("{userId}/preferredDestinations")]
         public async Task<IActionResult> AddUserPreferredDestinations(int userId, [FromBody] List<UserPreferredDestination> preferredDestinations)
         {

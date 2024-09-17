@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace JoinJoy.Core.Services
+namespace JoinJoy.Core.Interfaces
 {
     public interface IMatchService
     {
-        Task<IEnumerable<Match>> FindMatchesAsync(int userId, string interest);
+        Task<IEnumerable<Match>> GetUserMatchesAsync(int userId);
+        Task<ServiceResult> CreateMatchAsync(Match match);
+        Task<ServiceResult> AcceptMatchAsync(int matchId);
     }
 }

@@ -14,7 +14,12 @@ namespace JoinJoy.Infrastructure.Data.Repositories
         public MatchRepository(ApplicationDbContext context) : base(context)
         {
         }
-
+        public async Task<IEnumerable<Match>> GetUserMatchesAsync(int userId)
+        {
+            return await _context.Matches
+                .Where(m => m.UserId1 == userId || m.UserId2 == userId)
+                .ToListAsync();
+        }
         public async Task<IEnumerable<Match>> GetMatchesForUserAsync(int userId)
         {
             return await _context.Matches

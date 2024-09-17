@@ -19,5 +19,6 @@ namespace JoinJoy.Core.Services
         Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, Location? location);
         Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address);
         Task<ServiceResult> UpdateUserDistanceWillingToTravelAsync(int userId, double distance);
+        Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId);
     }
 }

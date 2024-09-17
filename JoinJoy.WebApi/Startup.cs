@@ -31,6 +31,16 @@ namespace JoinJoy.WebApi
 
             var googleApiKey = Configuration["GoogleApiKey"];
             var huggingFaceApiKey = Configuration["HuggingFaceApiKey"];
+            // Add CORS policy to allow Angular frontend
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAngular", builder =>
+                {
+                    builder.WithOrigins("http://localhost:4200")  // Angular URL
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
+                });
+            });
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IUserRepository, UserRepository>();
@@ -40,6 +50,10 @@ namespace JoinJoy.WebApi
             services.AddScoped<ISubcategoryRepository, SubcategoryRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>(); // Ensure LocationRepository is registered
             services.AddScoped<IUserActivityRepository, UserActivityRepository>();
+            services.AddScoped<IRepository<Match>, Repository<Match>>();
+            services.AddScoped<IMatchRepository, MatchRepository>();
+            services.AddScoped<IMatchService, MatchService>();
+            services.AddScoped<IMatchingService, MatchingService>();
             // Register services
             services.AddScoped<IUserService>(provider =>
             {
@@ -119,7 +133,7 @@ namespace JoinJoy.WebApi
             }
 
             app.UseHttpsRedirection();
-
+            app.UseCors("AllowAngular");  // Enable the CORS policy
             app.UseRouting();
 
             app.UseAuthentication();
