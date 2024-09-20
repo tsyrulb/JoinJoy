@@ -36,5 +36,18 @@ namespace JoinJoy.Infrastructure.Data.Repositories
                 .ThenInclude(uc => uc.User)
                 .SingleOrDefaultAsync(c => c.Id == conversationId);
         }
+
+        public async Task SaveChangesAsync()
+        {
+            // Save the changes asynchronously to the database
+            await _context.SaveChangesAsync();
+        }
+        public async Task<Conversation> FindExistingConversationAsync(int userId1, int userId2)
+        {
+            return await _context.Conversations
+                .Where(c => c.Participants.Any(p => p.UserId == userId1) && c.Participants.Any(p => p.UserId == userId2))
+                .FirstOrDefaultAsync();
+        }
     }
+
 }

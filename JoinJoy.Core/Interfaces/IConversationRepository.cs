@@ -8,5 +8,7 @@ namespace JoinJoy.Core.Interfaces
     {
         Task<IEnumerable<Conversation>> GetConversationsForUserAsync(int userId);
         Task<Conversation> GetConversationWithMessagesAsync(int conversationId);
+        Task SaveChangesAsync();
+        Task<Conversation> FindExistingConversationAsync(int userId1, int userId2);
     }
 }

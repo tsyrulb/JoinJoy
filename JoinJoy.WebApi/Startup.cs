@@ -53,8 +53,13 @@ namespace JoinJoy.WebApi
             services.AddScoped<IRepository<Match>, Repository<Match>>();
             services.AddScoped<IMatchRepository, MatchRepository>();
             services.AddScoped<IMatchService, MatchService>();
+            // Register message service and repository
+            services.AddScoped<IMessageService, MessageService>();
+            services.AddScoped<IMessageRepository, MessageRepository>();  // Add this line
+            services.AddScoped<IConversationRepository, ConversationRepository>();
+            services.AddScoped<IRepository<Conversation>, Repository<Conversation>>();
+            services.AddScoped<IRepository<Message>, Repository<Message>>();
             services.AddScoped<IMatchingService, MatchingService>();
-            // Register services
             services.AddScoped<IUserService>(provider =>
             {
                 var userRepository = provider.GetRequiredService<IRepository<User>>();
@@ -69,7 +74,6 @@ namespace JoinJoy.WebApi
                     googleApiKey
                 );
             });
-
             services.AddScoped<IActivityService>(provider =>
             {
                 var activityRepository = provider.GetRequiredService<IRepository<Activity>>();

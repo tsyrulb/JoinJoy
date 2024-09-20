@@ -8,5 +8,6 @@ namespace JoinJoy.Core.Interfaces
     {
         Task<IEnumerable<Message>> GetMessagesForConversationAsync(int conversationId);
         Task<IEnumerable<Message>> GetMessagesForUserAsync(int userId);
+        Task SaveChangesAsync();
     }
 }

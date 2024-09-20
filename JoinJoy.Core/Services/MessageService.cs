@@ -16,21 +16,56 @@ public class MessageService : IMessageService
         _conversationRepository = conversationRepository;
     }
 
-    // Send a new message
+    // Send a new messages
     public async Task<ServiceResult> SendMessageAsync(Message message)
     {
-        if (string.IsNullOrEmpty(message.Content) || message.SenderId == 0 || message.ConversationId == 0)
+        if (string.IsNullOrEmpty(message.Content) || message.SenderId == 0 || message.ReceiverId == 0)
         {
             return new ServiceResult { Success = false, Message = "Invalid message input." };
         }
 
+        // Check if a conversation between the sender and receiver already exists
+        var existingConversation = await _conversationRepository.FindExistingConversationAsync(message.SenderId, message.ReceiverId);
+
+        if (existingConversation != null)
+        {
+            // Continue with the existing conversation
+            message.ConversationId = existingConversation.Id;
+        }
+        else
+        {
+            // Create a new conversation if one doesn't exist
+            var newConversation = new Conversation
+            {
+                // Optionally set properties like title, created date, etc.
+                Title = $"Conversation between {message.SenderId} and {message.ReceiverId}",  // Set a default title
+                Participants = new List<UserConversation>
+            {
+                new UserConversation { UserId = message.SenderId },
+                new UserConversation { UserId = message.ReceiverId }
+            }
+            };
+
+            // Save the new conversation to the database
+            await _conversationRepository.AddAsync(newConversation);
+            await _conversationRepository.SaveChangesAsync();
+
+            // Assign the new conversation ID to the message
+            message.ConversationId = newConversation.Id;
+        }
+
+        // Set the other message properties
         message.Timestamp = DateTime.UtcNow;
         message.IsRead = false;
 
+        // Add and save the message
         await _messageRepository.AddAsync(message);
+        await _messageRepository.SaveChangesAsync();
 
         return new ServiceResult { Success = true, Message = "Message sent successfully" };
     }
+
+
 
     // Retrieve messages from a conversation
     public async Task<IEnumerable<Message>> GetMessagesForConversationAsync(int conversationId)

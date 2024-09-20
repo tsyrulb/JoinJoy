@@ -1,17 +1,39 @@
-﻿using JoinJoy.Core.Models;
+﻿using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public class Message
+namespace JoinJoy.Core.Models
 {
-    public int Id { get; set; }
-    public int SenderId { get; set; }
-    public int ReceiverId { get; set; }  // ReceiverId can be null if it's a group chat.
-    public int ConversationId { get; set; } // Ties the message to a conversation
-    public string Content { get; set; }
-    public DateTime Timestamp { get; set; }
-    public bool IsRead { get; set; }
+    public class Message
+    {
+        public int Id { get; set; } // Unique identifier for the message
 
-    // Navigation properties
-    public User Sender { get; set; }
-    public User Receiver { get; set; }
-    public Conversation Conversation { get; set; }
+        [Required]
+        public int SenderId { get; set; } // ID of the user who sent the message
+
+        [Required]
+        public int ReceiverId { get; set; } // ID of the user who received the message
+
+        [Required]
+        public int ConversationId { get; set; } // ID of the conversation
+
+        [Required]
+        [StringLength(1000)]
+        public string Content { get; set; } // Content of the message
+
+        public DateTime Timestamp { get; set; } // Time when the message was sent
+        public bool IsRead { get; set; } // Flag indicating if the message has been read
+
+        [ForeignKey("SenderId")]
+        [JsonIgnore]
+        public User? Sender { get; set; } // Reference to the sender user
+
+        [ForeignKey("ReceiverId")]
+        [JsonIgnore]  // Ignore during validation
+        public User? Receiver { get; set; } // Reference to the receiver user
+
+        [ForeignKey("ConversationId")]
+        [JsonIgnore]  // Ignore during validation
+        public Conversation? Conversation { get; set; } // Reference to the conversation
+    }
 }
