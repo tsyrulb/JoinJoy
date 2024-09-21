@@ -6,11 +6,11 @@ namespace JoinJoy.Core.Models
     public class Conversation
     {
         public int Id { get; set; } // Unique identifier for the conversation
-        public string Title { get; set; } // Title for group chats (optional for one-on-one)
+        public string? Title { get; set; } // Title for group chats (optional for one-on-one)
 
         // Navigation properties
-        public ICollection<Message> Messages { get; set; } // Messages in this conversation
-        public ICollection<UserConversation> Participants { get; set; } // Users involved in the conversation
+        public ICollection<Message>? Messages { get; set; } // Messages in this conversation
+        public ICollection<UserConversation> Participants { get; set; } = new List<UserConversation>(); // Users involved in the conversation
     }
 
     public class UserConversation

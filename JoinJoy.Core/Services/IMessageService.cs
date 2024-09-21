@@ -12,5 +12,6 @@ namespace JoinJoy.Core.Services
         Task<ServiceResult> DeleteMessageAsync(int messageId);
         Task<ServiceResult> DeleteConversationAsync(int conversationId);
         Task<IEnumerable<Conversation>> GetConversationsForUserAsync(int userId);
+        Task<ServiceResult> AddUsersToConversationAsync(int conversationId, List<int> userIds);
     }
 }

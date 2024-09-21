@@ -14,5 +14,6 @@ namespace JoinJoy.Core.Interfaces
         Task UpdateAsync(TEntity entity);
         Task RemoveAsync(TEntity entity);
         Task RemoveRangeAsync(IEnumerable<TEntity> entities);
+        Task SaveChangesAsync();
     }
 }

@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Models;
 using JoinJoy.Core.Services;
+using DayOfWeek = JoinJoy.Core.Models.DayOfWeek;
 
 namespace JoinJoy.Infrastructure.Services
 {
@@ -15,20 +16,17 @@ namespace JoinJoy.Infrastructure.Services
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<UserSubcategory> _userSubcategoryRepository;
         private readonly IRepository<UserPreferredDestination> _userPreferredDestinationRepository;
-        private readonly IRepository<UserAvailability> _userAvailabilityRepository;
         private readonly string _googleApiKey;
         public UserService(
             IRepository<User> userRepository,
             IRepository<UserSubcategory> userSubcategoryRepository,
             IRepository<UserPreferredDestination> userPreferredDestinationRepository,
-            IRepository<UserAvailability> userAvailabilityRepository,
             string googleApiKey
             )
         {
             _userRepository = userRepository;
             _userSubcategoryRepository = userSubcategoryRepository;
             _userPreferredDestinationRepository = userPreferredDestinationRepository;
-            _userAvailabilityRepository = userAvailabilityRepository;
             _googleApiKey = googleApiKey ?? throw new ArgumentNullException(nameof(googleApiKey));
         }
 
@@ -183,8 +181,33 @@ namespace JoinJoy.Infrastructure.Services
         }
 
         //public async Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId);
-       
 
+        public async Task<bool> IsUserAvailableAsync(int userId, DateTime currentTime)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+
+            // Check user unavailability
+            if (user.UnavailableDay.HasValue && user.UnavailableStartTime.HasValue && user.UnavailableEndTime.HasValue)
+            {
+                if (user.UnavailableDay.Value.Equals(currentTime.DayOfWeek))
+                {
+                    var start = user.UnavailableStartTime.Value;
+                    var end = user.UnavailableEndTime.Value;
+                    var current = currentTime.TimeOfDay;
+
+                    if (current >= start && current <= end)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
         public async Task<ServiceResult> AddUserSubcategoriesAsync(int userId, List<UserSubcategoryDto> subcategoryIds)
         {
             var user = await _userRepository.GetByIdAsync(userId);
@@ -238,23 +261,6 @@ namespace JoinJoy.Infrastructure.Services
             return new ServiceResult { Success = true, Message = "User preferred destinations added successfully" };
         }
 
-        public async Task<ServiceResult> AddUserAvailabilitiesAsync(int userId, List<UserAvailability> availabilities)
-        {
-            var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null)
-            {
-                return new ServiceResult { Success = false, Message = "User not found" };
-            }
-
-            foreach (var availability in availabilities)
-            {
-                availability.UserId = userId;
-                await _userAvailabilityRepository.AddAsync(availability);
-            }
-
-            return new ServiceResult { Success = true, Message = "User availabilities added successfully" };
-        }
-
         public Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, Location? location)
         {
             throw new NotImplementedException();
@@ -278,6 +284,27 @@ namespace JoinJoy.Infrastructure.Services
 
             return new ServiceResult { Success = true, Message = "Distance willing to travel updated successfully" };
         }
+        public async Task<ServiceResult> SetUserAvailabilityAsync(int userId, DayOfWeek unavailableDay, TimeSpan unavailableStartTime, TimeSpan unavailableEndTime)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            if (user == null)
+            {
+                return new ServiceResult { Success = false, Message = "User not found" };
+            }
+
+            // Update the user's availability
+            user.UnavailableDay = unavailableDay;
+            user.UnavailableStartTime = unavailableStartTime;
+            user.UnavailableEndTime = unavailableEndTime;
+
+            // Save changes to the database
+            await _userRepository.UpdateAsync(user);
+            await _userRepository.SaveChangesAsync();
+
+            return new ServiceResult { Success = true, Message = "User availability updated successfully" };
+        }
+
 
         public Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId)
         {

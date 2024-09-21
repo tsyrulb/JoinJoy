@@ -10,9 +10,11 @@
         public DateTime? DateOfBirth { get; set; } // User's date of birth
         public bool? IsAdmin { get; set; }
         public Location? Location { get; set; }
+        public DayOfWeek? UnavailableDay { get; set; } // Nullable in case user has no unavailability
+        public TimeSpan? UnavailableStartTime { get; set; } // Start of unavailability
+        public TimeSpan? UnavailableEndTime { get; set; } // End of unavailability
         public ICollection<UserSubcategory>? UserSubcategories { get; set; } // Many-to-many relationship with subcategories
         public ICollection<UserPreferredDestination>? UserPreferredDestinations { get; set; }
-        public ICollection<UserAvailability>? UserAvailabilities { get; set; }
         public double? DistanceWillingToTravel { get; set; }
 
         // Navigation properties

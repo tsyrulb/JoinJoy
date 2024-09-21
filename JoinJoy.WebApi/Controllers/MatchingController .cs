@@ -16,13 +16,6 @@ namespace JoinJoy.WebApi.Controllers
             _matchingService = matchingService;
         }
 
-        [HttpGet("find-matches")]
-        public async Task<IActionResult> FindMatchesAsync()
-        {
-            var matches = await _matchingService.FindMatchesAsync();
-            return Ok(matches);
-        }
-
         // GET: api/matching/users-with-details
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()

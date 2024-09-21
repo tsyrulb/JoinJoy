@@ -4,8 +4,6 @@ namespace JoinJoy.Infrastructure.Services
 {
     public interface IMatchingService
     {
-        Task<IEnumerable<Match>> FindMatchesAsync();
-
         Task<IEnumerable<User>> GetAllUsersAsync();
         Task<IEnumerable<UserActivity>> GetAllUserActivitiesAsync();
         Task<IEnumerable<Activity>> GetAllActivitiesAsync();

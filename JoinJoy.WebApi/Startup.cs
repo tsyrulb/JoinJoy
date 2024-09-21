@@ -45,14 +45,11 @@ namespace JoinJoy.WebApi
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IPreferredDestinationRepository, PreferredDestinationRepository>();
-            services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ISubcategoryRepository, SubcategoryRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>(); // Ensure LocationRepository is registered
             services.AddScoped<IUserActivityRepository, UserActivityRepository>();
             services.AddScoped<IRepository<Match>, Repository<Match>>();
-            services.AddScoped<IMatchRepository, MatchRepository>();
-            services.AddScoped<IMatchService, MatchService>();
             // Register message service and repository
             services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<IMessageRepository, MessageRepository>();  // Add this line
@@ -65,12 +62,10 @@ namespace JoinJoy.WebApi
                 var userRepository = provider.GetRequiredService<IRepository<User>>();
                 var userSubcategoryRepository = provider.GetRequiredService<IRepository<UserSubcategory>>();
                 var userPreferredDestinationRepository = provider.GetRequiredService<IRepository<UserPreferredDestination>>();
-                var userAvailabilityRepository = provider.GetRequiredService<IRepository<UserAvailability>>();
                 return new UserService(
                     userRepository,
                     userSubcategoryRepository,
                     userPreferredDestinationRepository,
-                    userAvailabilityRepository,
                     googleApiKey
                 );
             });
@@ -90,9 +85,6 @@ namespace JoinJoy.WebApi
                     googleApiKey
                 );
             });
-            services.AddScoped<IAvailabilityService, AvailabilityService>();
-            services.AddScoped<IRepository<Availability>, Repository<Availability>>();
-            services.AddScoped<IRepository<UserAvailability>, Repository<UserAvailability>>();
             // Register AIChatService with HttpClient
             services.AddHttpClient<IAIChatService, AIChatService>(client =>
             {
@@ -109,10 +101,9 @@ namespace JoinJoy.WebApi
                 client.BaseAddress = new Uri("http://localhost:5000"); // Flask API base address
             });
             services.AddScoped<IPreferredDestinationService, PreferredDestinationService>();
-            services.AddScoped<IAvailabilityService, AvailabilityService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();
-
+            services.AddLogging();
             // Add SignalR
             services.AddSignalR();
 

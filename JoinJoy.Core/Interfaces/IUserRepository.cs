@@ -10,5 +10,6 @@ namespace JoinJoy.Core.Interfaces
         Task<IEnumerable<UserSubcategory>> GetUserSubcategoriesAsync(int userId);
         Task AddUserSubcategoryAsync(UserSubcategory userSubcategory);
         Task RemoveUserSubcategoryAsync(UserSubcategory userSubcategory);
+        Task SaveChangesAsync();
     }
 }

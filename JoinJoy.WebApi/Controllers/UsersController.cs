@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using JoinJoy.Core.Models;
 using JoinJoy.Core.Services;
 using Microsoft.AspNetCore.Mvc;
+using DayOfWeek = JoinJoy.Core.Models.DayOfWeek;
 
 namespace JoinJoy.WebApi.Controllers
 {
@@ -139,17 +140,19 @@ namespace JoinJoy.WebApi.Controllers
             }
             return Ok(result.Message);
         }
-
-        [HttpPost("{userId}/availabilities")]
-        public async Task<IActionResult> AddUserAvailabilities(int userId, [FromBody] List<UserAvailability> availabilities)
+        
+        [HttpPost("set-availability")]
+        public async Task<IActionResult> SetAvailability(int userId, DayOfWeek unavailableDay, TimeSpan unavailableStartTime, TimeSpan unavailableEndTime)
         {
-            var result = await _userService.AddUserAvailabilitiesAsync(userId, availabilities);
-            if (!result.Success)
+            var result = await _userService.SetUserAvailabilityAsync(userId, unavailableDay, unavailableStartTime, unavailableEndTime);
+
+            if (result.Success)
             {
-                return BadRequest(result.Message);
+                return Ok(result.Message);
             }
-            return Ok(result.Message);
+            return BadRequest(result.Message);
         }
+
 
         [HttpPut("{userId}/distance")]
         public async Task<IActionResult> UpdateUserDistanceWillingToTravel(int userId, [FromBody] double distance)
@@ -162,6 +165,22 @@ namespace JoinJoy.WebApi.Controllers
             }
 
             return Ok(result.Message);
+        }
+        
+        [HttpGet("{userId}/availability")]
+        public async Task<IActionResult> CheckUserAvailability(int userId)
+        {
+            var currentTime = DateTime.UtcNow;
+
+            var isAvailable = await _userService.IsUserAvailableAsync(userId, currentTime);
+            if (isAvailable)
+            {
+                return Ok(new { available = true, message = "User is available" });
+            }
+            else
+            {
+                return Ok(new { available = false, message = "User is not available" });
+            }
         }
     }
 }

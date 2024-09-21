@@ -15,8 +15,6 @@ namespace JoinJoy.Infrastructure.Data
         public DbSet<UserActivity> UserActivities { get; set; }
         public DbSet<PreferredDestination> PreferredDestinations { get; set; }
         public DbSet<UserPreferredDestination> UserPreferredDestinations { get; set; }
-        public DbSet<Availability> Availabilities { get; set; }
-        public DbSet<UserAvailability> UserAvailabilities { get; set; }
         public DbSet<Match> Matches { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
@@ -39,7 +37,6 @@ namespace JoinJoy.Infrastructure.Data
             modelBuilder.ApplyConfiguration(new ActivityConfiguration());
             modelBuilder.ApplyConfiguration(new ChatMessageConfiguration());
             modelBuilder.ApplyConfiguration(new FeedbackConfiguration());
-            modelBuilder.ApplyConfiguration(new MatchConfiguration());
             modelBuilder.ApplyConfiguration(new MessageConfiguration());
 
             // Configure many-to-many relationships
@@ -68,19 +65,6 @@ namespace JoinJoy.Infrastructure.Data
                 .HasOne(upd => upd.PreferredDestination)
                 .WithMany(pd => pd.UserPreferredDestinations)
                 .HasForeignKey(upd => upd.PreferredDestinationId);
-
-            modelBuilder.Entity<UserAvailability>()
-                .HasKey(ua => new { ua.UserId, ua.AvailabilityId });
-
-            modelBuilder.Entity<UserAvailability>()
-                .HasOne(ua => ua.User)
-                .WithMany(u => u.UserAvailabilities)
-                .HasForeignKey(ua => ua.UserId);
-
-            modelBuilder.Entity<UserAvailability>()
-                .HasOne(ua => ua.Availability)
-                .WithMany(a => a.UserAvailabilities)
-                .HasForeignKey(ua => ua.AvailabilityId);
 
             modelBuilder.Entity<UserSubcategory>()
                 .HasKey(us => new { us.UserId, us.SubcategoryId });

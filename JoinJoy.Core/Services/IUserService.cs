@@ -15,10 +15,11 @@ namespace JoinJoy.Core.Services
         Task<ServiceResult> AddUserSubcategoriesAsync(int userId, List<UserSubcategoryDto> subcategoryIds);
         Task<ServiceResult> RemoveUserSubcategoryAsync(int userId, int subcategoryId);
         Task<ServiceResult> AddUserPreferredDestinationsAsync(int userId, List<UserPreferredDestination> preferredDestinations);
-        Task<ServiceResult> AddUserAvailabilitiesAsync(int userId, List<UserAvailability> availabilities);
         Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, Location? location);
         Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address);
         Task<ServiceResult> UpdateUserDistanceWillingToTravelAsync(int userId, double distance);
         Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId);
+        Task<bool> IsUserAvailableAsync(int userId, DateTime currentTime);
+        Task<ServiceResult> SetUserAvailabilityAsync(int userId, Models.DayOfWeek unavailableDay, TimeSpan unavailableStartTime, TimeSpan unavailableEndTime);
     }
 }

@@ -36,59 +36,6 @@ namespace JoinJoy.Infrastructure.Services
             _category = category;
         }
 
-        public async Task<IEnumerable<Match>> FindMatchesAsync()
-        {
-            var users = await _userRepository.GetAllAsync();
-            var activities = await _activityRepository.GetAllAsync();
-            var matches = new List<Match>();
-
-            foreach (var activity in activities)
-            {
-                var interestedUsers = users.Where(u => u.UserSubcategories
-                                                      .Select(us => us.SubcategoryId)
-                                                      .Intersect(activity.UserActivities
-                                                                          .Select(ua => ua.UserId))
-                                                      .Any())
-                                           .ToList();
-
-                var userPairs = interestedUsers.SelectMany((u, i) => interestedUsers.Skip(i + 1), (u1, u2) => (u1, u2));
-
-                foreach (var (user1, user2) in userPairs)
-                {
-                    // Check for overlapping availability
-                    var overlappingAvailability = user1.UserAvailabilities
-                                                       .Select(ua => ua.Availability)
-                                                       .Intersect(user2.UserAvailabilities
-                                                                       .Select(ua => ua.Availability))
-                                                       .ToList();
-
-                    // Check distance willing to travel
-                    var distance = CalculateDistance(user1.Location, user2.Location);
-                    var withinDistance = distance <= user1.DistanceWillingToTravel && distance <= user2.DistanceWillingToTravel;
-
-                    // If all criteria are met, create a match
-                    if (overlappingAvailability.Any() && withinDistance)
-                    {
-                        matches.Add(new Match
-                        {
-                            UserId1 = user1.Id,
-                            UserId2 = user2.Id,
-                            ActivityId = activity.Id,
-                            MatchDate = DateTime.Now,
-                            IsAccepted = false
-                        });
-                    }
-                }
-            }
-
-            foreach (var match in matches)
-            {
-                await _matchRepository.AddAsync(match);
-            }
-
-            return matches;
-        }
-
         private double CalculateDistance(Location loc1, Location loc2)
         {
             double R = 6371e3; // metres

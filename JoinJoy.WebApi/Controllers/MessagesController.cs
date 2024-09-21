@@ -49,6 +49,20 @@ namespace JoinJoy.WebApi.Controllers
             return BadRequest(result);
         }
 
+        [HttpPost("add-users-to-conversation")]
+        public async Task<IActionResult> AddUsersToConversation(int conversationId, [FromBody] List<int> userIds)
+        {
+            var result = await _messageService.AddUsersToConversationAsync(conversationId, userIds);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
+
         // GET: api/messages/conversations/user/{userId}
         [HttpGet("conversations/user/{userId}")]
         public async Task<IActionResult> GetConversationsForUser(int userId)

@@ -42,5 +42,9 @@ namespace JoinJoy.Infrastructure.Data.Repositories
             ApplicationDbContext.UserSubcategories.Remove(userSubcategory);
             await ApplicationDbContext.SaveChangesAsync();
         }
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
     }
 }
