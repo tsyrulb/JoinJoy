@@ -30,6 +30,7 @@ namespace JoinJoy.WebApi
                     b => b.MigrationsAssembly("JoinJoy.Infrastructure")));
 
             var googleApiKey = Configuration["GoogleApiKey"];
+            var geocodingApiKey = Configuration["GeocodingApi:ApiKey"];
             var huggingFaceApiKey = Configuration["HuggingFaceApiKey"];
             // Add CORS policy to allow Angular frontend
             services.AddCors(options =>
@@ -67,6 +68,7 @@ namespace JoinJoy.WebApi
                     userSubcategoryRepository,
                     userPreferredDestinationRepository,
                     googleApiKey
+
                 );
             });
             services.AddScoped<IActivityService>(provider =>
@@ -82,7 +84,8 @@ namespace JoinJoy.WebApi
                     userRepository,
                     userActivityRepository,
                     customLocationRepository,
-                    googleApiKey
+                    googleApiKey,
+                    geocodingApiKey
                 );
             });
             // Register AIChatService with HttpClient

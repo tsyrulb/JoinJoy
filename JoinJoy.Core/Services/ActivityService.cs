@@ -1,6 +1,7 @@
 ﻿using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Models;
 using JoinJoy.Core.Services;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -17,6 +18,7 @@ namespace JoinJoy.Infrastructure.Services
         private readonly IRepository<UserActivity> _userActivityRepository;
         private readonly ILocationRepository _customLocationRepository;
         private readonly string _googleApiKey;
+        private readonly string _geocodingApiKey;
 
         public ActivityService(
             IRepository<Activity> activityRepository,
@@ -24,7 +26,8 @@ namespace JoinJoy.Infrastructure.Services
             IUserRepository userRepository,
             IRepository<UserActivity> userActivityRepository,
             ILocationRepository customLocationRepository,
-            string googleApiKey
+            string googleApiKey,
+            string geocodingApiKey
         )
         {
             _activityRepository = activityRepository;
@@ -33,41 +36,51 @@ namespace JoinJoy.Infrastructure.Services
             _userActivityRepository = userActivityRepository;
             _customLocationRepository = customLocationRepository;
             _googleApiKey = googleApiKey ?? throw new ArgumentNullException(nameof(googleApiKey));
+            _geocodingApiKey = geocodingApiKey;
         }
 
         public async Task<ServiceResult> CreateActivityAsync(ActivityRequest activityRequest)
         {
-            var (latitude, longitude, placeId) = await GetCoordinatesAsync(activityRequest.LocationName);
-            var newLocation = new Location
+            try
             {
-                Latitude = latitude,
-                Longitude = longitude,
-                Address = activityRequest.LocationName,
-                PlaceId = placeId
-            };
+                var (latitude, longitude, placeId) = await GetCoordinatesAsync(activityRequest.LocationName);
 
-            await _locationRepository.AddAsync(newLocation);
+                var newLocation = new Location
+                {
+                    Latitude = latitude,
+                    Longitude = longitude,
+                    Address = activityRequest.LocationName,
+                    PlaceId = placeId
+                };
 
-            var activity = new Activity
+                await _locationRepository.AddAsync(newLocation);
+
+                var activity = new Activity
+                {
+                    Name = activityRequest.Name,
+                    Description = activityRequest.Description,
+                    Date = activityRequest.Date,
+                    Location = newLocation,
+                    CreatedById = activityRequest.CreatedById
+                };
+
+                await _activityRepository.AddAsync(activity);
+
+                var userActivity = new UserActivity
+                {
+                    UserId = activityRequest.CreatedById,
+                    ActivityId = activity.Id
+                };
+
+                await _userActivityRepository.AddAsync(userActivity);
+
+                return new ServiceResult { Success = true, Message = "Activity created successfully" };
+            }
+            catch (Exception ex)
             {
-                Name = activityRequest.Name,
-                Description = activityRequest.Description,
-                Date = activityRequest.Date,
-                Location = newLocation,
-                CreatedById = activityRequest.CreatedById
-            };
-
-            await _activityRepository.AddAsync(activity);
-            // Add the creator to UserActivities
-            var userActivity = new UserActivity
-            {
-                UserId = activityRequest.CreatedById,
-                ActivityId = activity.Id
-            };
-
-            await _userActivityRepository.AddAsync(userActivity);
-
-            return new ServiceResult { Success = true, Message = "Activity created successfully" };
+                // Log the error message
+                return new ServiceResult { Success = false, Message = "Error creating activity: " + ex.Message };
+            }
         }
 
         public async Task<ServiceResult> UpdateActivityAsync(int activityId, ActivityRequest activityRequest)
@@ -179,31 +192,45 @@ namespace JoinJoy.Infrastructure.Services
         }
         private async Task<(double latitude, double longitude, string placeId)> GetCoordinatesAsync(string address)
         {
-            string requestUri = string.Format("https://maps.googleapis.com/maps/api/geocode/xml?address={0}&key={1}&sensor=false", Uri.EscapeDataString(address), _googleApiKey);
+            string requestUri = string.Format("https://geocode.maps.co/search?q={0}&api_key={1}",
+                                              Uri.EscapeDataString(address), _geocodingApiKey);
 
             try
             {
                 WebRequest request = WebRequest.Create(requestUri);
                 WebResponse response = await request.GetResponseAsync();
 
-                XDocument xdoc = XDocument.Load(response.GetResponseStream());
+                using (var reader = new StreamReader(response.GetResponseStream()))
+                {
+                    string jsonResponse = await reader.ReadToEndAsync();
+                    var geoData = JsonConvert.DeserializeObject<List<GeocodeResponse>>(jsonResponse);
 
-                XElement result = xdoc.Element("GeocodeResponse").Element("result");
-                XElement locationElement = result.Element("geometry").Element("location");
-                XElement lat = locationElement.Element("lat");
-                XElement lng = locationElement.Element("lng");
-                XElement placeIdElement = result.Element("place_id");
+                    if (geoData != null && geoData.Count > 0)
+                    {
+                        var firstResult = geoData[0];
+                        double latitude = double.Parse(firstResult.Lat);
+                        double longitude = double.Parse(firstResult.Lon);
+                        string placeId = firstResult.PlaceId.ToString(); // We convert `place_id` to a string
 
-                double latitude = double.Parse(lat.Value);
-                double longitude = double.Parse(lng.Value);
-                string placeId = placeIdElement.Value;
-
-                return (latitude, longitude, placeId);
+                        return (latitude, longitude, placeId);
+                    }
+                    else
+                    {
+                        throw new Exception($"Geocoding API returned no results for the specified address: {address}");
+                    }
+                }
             }
-            catch (Exception)
+            catch (WebException webEx)
             {
-                throw;
+                throw new Exception($"Error calling Geocoding API: {webEx.Message}", webEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error parsing Geocoding API response: " + ex.Message, ex);
             }
         }
+
+
+
     }
 }
