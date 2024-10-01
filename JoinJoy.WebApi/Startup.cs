@@ -53,6 +53,7 @@ namespace JoinJoy.WebApi
             services.AddScoped<IRepository<Match>, Repository<Match>>();
             // Register message service and repository
             services.AddScoped<IMessageService, MessageService>();
+            services.AddScoped<OpenStreetMapService>();
             services.AddScoped<IMessageRepository, MessageRepository>();  // Add this line
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IRepository<Conversation>, Repository<Conversation>>();
