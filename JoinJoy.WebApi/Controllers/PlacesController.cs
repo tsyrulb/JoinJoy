@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -30,5 +31,31 @@ public class PlacesController : ControllerBase
             return StatusCode(500, "Internal server error: " + ex.Message);
 
         }
+    }
+    // POST: api/places/user-input
+    [HttpPost("user-input")]
+    public async Task<IActionResult> PostUserInput([FromBody] UserInputModel inputModel)
+    {
+        if (inputModel == null || string.IsNullOrWhiteSpace(inputModel.UserInput))
+        {
+            return BadRequest(new { error = "user_input is required" });
+        }
+
+        try
+        {
+            // Call the service to get the SBERT matches
+            var matches = await _osmService.GetSbertMatches(inputModel.UserInput);
+            return Ok(matches);  // Return the matches from Flask API to the client
+        }
+        catch (HttpRequestException e)
+        {
+            return StatusCode(500, new { error = $"Error communicating with Flask API: {e.Message}" });
+        }
+    }
+
+    // Input model to represent the JSON body
+    public class UserInputModel
+    {
+        public string UserInput { get; set; }
     }
 }
