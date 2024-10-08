@@ -8,5 +8,6 @@ namespace JoinJoy.Core.Interfaces
     {
         Task<IEnumerable<Feedback>> GetFeedbackForActivityAsync(int activityId);
         Task<IEnumerable<Feedback>> GetUserFeedbackAsync(int userId);
+
     }
 }

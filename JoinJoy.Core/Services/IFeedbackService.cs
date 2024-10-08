@@ -7,8 +7,9 @@ namespace JoinJoy.Core.Services
     public interface IFeedbackService
     {
         Task<ServiceResult> SubmitFeedbackAsync(Feedback feedback);
-        Task<IEnumerable<Feedback>> GetFeedbackAsync(int userId);
         Task<IEnumerable<Feedback>> GetUserFeedbackAsync(int userId);
         Task<IEnumerable<Feedback>> GetFeedbackForActivityAsync(int activityId);
+        Task<ServiceResult> DeleteFeedbackAsync(int id);
+        Task<ServiceResult> UpdateFeedbackAsync(int id, FeedbackRequest feedbackRequest);
     }
 }

@@ -17,9 +17,49 @@ namespace JoinJoy.WebApi.Controllers
         }
 
         [HttpPost("submit")]
-        public async Task<IActionResult> SubmitFeedback(Feedback feedback)
+        public async Task<IActionResult> SubmitFeedback(FeedbackRequest feedbackRequest)
         {
+            if (feedbackRequest.Rating < 1 || feedbackRequest.Rating > 5)
+            {
+                return BadRequest("Rating must be between 1 and 5.");
+            }
+
+            var feedback = new Feedback
+            {
+                UserId = feedbackRequest.UserId,
+                ActivityId = feedbackRequest.ActivityId,
+                TargetUserId = feedbackRequest.TargetUserId,
+                Rating = feedbackRequest.Rating,
+                Timestamp = DateTime.UtcNow
+            };
+
             var result = await _feedbackService.SubmitFeedbackAsync(feedback);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
+        // Update feedback
+        [HttpPut("update/{id}")]
+        public async Task<IActionResult> UpdateFeedback(int id, [FromBody] FeedbackRequest feedbackRequest)
+        {
+            var result = await _feedbackService.UpdateFeedbackAsync(id, feedbackRequest);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        // Delete feedback
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> DeleteFeedback(int id)
+        {
+            var result = await _feedbackService.DeleteFeedbackAsync(id);
             if (result.Success)
             {
                 return Ok(result);

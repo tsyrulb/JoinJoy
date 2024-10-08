@@ -5,6 +5,7 @@ using JoinJoy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace JoinJoy.Infrastructure.Data.Repositories

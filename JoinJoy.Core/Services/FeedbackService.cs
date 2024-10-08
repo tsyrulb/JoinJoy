@@ -9,26 +9,42 @@ namespace JoinJoy.Infrastructure.Services
     public class FeedbackService : IFeedbackService
     {
         private readonly IFeedbackRepository _feedbackRepository;
+        private readonly IUserActivityRepository _userActivityRepository;
 
-        public FeedbackService(IFeedbackRepository feedbackRepository)
+        public FeedbackService(IFeedbackRepository feedbackRepository, IUserActivityRepository userActivityRepository)
         {
             _feedbackRepository = feedbackRepository;
+            _userActivityRepository = userActivityRepository;
         }
-
         public async Task<ServiceResult> SubmitFeedbackAsync(Feedback feedback)
         {
-            // Validate the feedback data before adding
-            if (feedback.Rating < 1 || feedback.Rating > 5)
+            // Rule 1: Prevent users from submitting feedback to themselves
+            if (feedback.UserId == feedback.TargetUserId)
             {
-                return new ServiceResult { Success = false, Message = "Rating must be between 1 and 5" };
+                return new ServiceResult { Success = false, Message = "You cannot submit feedback to yourself." };
             }
 
+            // Rule 2: Check if feedback for the same user on the same activity already exists
+            var existingFeedback = await _feedbackRepository.FindAsync(f =>
+                f.UserId == feedback.UserId && f.ActivityId == feedback.ActivityId && f.TargetUserId == feedback.TargetUserId);
+
+            if (existingFeedback.Any())
+            {
+                return new ServiceResult { Success = false, Message = "You have already submitted feedback for this user in this activity." };
+            }
+
+            // Ensure that both users participated in the activity
+            var userActivities = await _userActivityRepository.GetUsersInActivityAsync(feedback.ActivityId);
+            if (!userActivities.Contains(feedback.UserId) || !userActivities.Contains(feedback.TargetUserId))
+            {
+                return new ServiceResult { Success = false, Message = "Both users must have participated in the same activity." };
+            }
+
+            // Proceed to submit feedback if all rules pass
             feedback.Timestamp = DateTime.UtcNow;
-
             await _feedbackRepository.AddAsync(feedback);
-            await _feedbackRepository.SaveChangesAsync();
 
-            return new ServiceResult { Success = true, Message = "Feedback submitted successfully" };
+            return new ServiceResult { Success = true, Message = "Feedback submitted successfully." };
         }
 
         public async Task<IEnumerable<Feedback>> GetFeedbackForActivityAsync(int activityId)
@@ -41,10 +57,39 @@ namespace JoinJoy.Infrastructure.Services
             return await _feedbackRepository.GetUserFeedbackAsync(userId);
         }
 
-        // Add the implementation for GetFeedbackAsync
-        public async Task<IEnumerable<Feedback>> GetFeedbackAsync(int userId)
+        public async Task<ServiceResult> UpdateFeedbackAsync(int id, FeedbackRequest feedbackRequest)
         {
-            return await _feedbackRepository.GetUserFeedbackAsync(userId);
+            var feedback = await _feedbackRepository.GetByIdAsync(id);
+            if (feedback == null)
+            {
+                return new ServiceResult { Success = false, Message = "Feedback not found." };
+            }
+
+            // Ensure the user who created the feedback is the one updating it
+            if (feedback.UserId != feedbackRequest.UserId)
+            {
+                return new ServiceResult { Success = false, Message = "You are not authorized to update this feedback." };
+            }
+
+            // Update feedback details
+            feedback.Rating = feedbackRequest.Rating;
+            feedback.Timestamp = DateTime.UtcNow;
+
+            await _feedbackRepository.UpdateAsync(feedback);
+
+            return new ServiceResult { Success = true, Message = "Feedback updated successfully." };
+        }
+
+        public async Task<ServiceResult> DeleteFeedbackAsync(int id)
+        {
+            var feedback = await _feedbackRepository.GetByIdAsync(id);
+            if (feedback == null)
+            {
+                return new ServiceResult { Success = false, Message = "Feedback not found." };
+            }
+
+            await _feedbackRepository.RemoveAsync(feedback);
+            return new ServiceResult { Success = true, Message = "Feedback deleted successfully." };
         }
     }
 }
