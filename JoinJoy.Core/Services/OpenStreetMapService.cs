@@ -2,12 +2,12 @@
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using JoinJoy.Core.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 public class OpenStreetMapService
 {
-//private readonly string _overpassApiUrl = "https://overpass-api.de/api/interpreter";
     private readonly string _overpassApiUrl = "https://maps.mail.ru/osm/tools/overpass/api/interpreter";
     private readonly HttpClient _httpClient;
     public OpenStreetMapService(HttpClient httpClient)
@@ -17,32 +17,29 @@ public class OpenStreetMapService
     private const string FlaskApiUrl = "http://localhost:5000/find_matches";  // URL of the Flask API
     public async Task<string> GetNearbyPlaces(double latitude, double longitude, string key, string value, int radius)
     {
-        // Build the Overpass query dynamically based on the key and value
         string overpassQuery = $@"
-        [out:json];
-        (
-          node[""{key}""=""{value}""](around:{radius},{latitude},{longitude});
-          way[""{key}""=""{value}""](around:{radius},{latitude},{longitude});
-          relation[""{key}""=""{value}""](around:{radius},{latitude},{longitude});
-        );
-        out body;
-        >;
-        out skel qt;";
+    [out:json];
+    (
+      node[""{key}""=""{value}""](around:{radius},{latitude},{longitude});
+      way[""{key}""=""{value}""](around:{radius},{latitude},{longitude});
+      relation[""{key}""=""{value}""](around:{radius},{latitude},{longitude});
+    );
+    out body;
+    >;
+    out skel qt;";
 
-        using (HttpClient client = new HttpClient())
+        var content = new StringContent(overpassQuery);
+
+        HttpResponseMessage response = await _httpClient.PostAsync(_overpassApiUrl, content);
+
+        if (response.IsSuccessStatusCode)
         {
-            var content = new StringContent(overpassQuery);
-            HttpResponseMessage response = await client.PostAsync(_overpassApiUrl, content);
-
-            if (response.IsSuccessStatusCode)
-            {
-                string result = await response.Content.ReadAsStringAsync();
-                return ParsePlacesResult(result);
-            }
-            else
-            {
-                return "Error retrieving data from Overpass API";
-            }
+            string result = await response.Content.ReadAsStringAsync();
+            return ParsePlacesResult(result);
+        }
+        else
+        {
+            return $"Error retrieving data from Overpass API: {response.StatusCode}";
         }
     }
 
@@ -80,7 +77,7 @@ public class OpenStreetMapService
         }
     }
 
-    public async Task<object> GetSbertMatches(string userInput)
+    public async Task<SbertMatchResponse> GetSbertMatches(string userInput)
     {
         // Step 1: Serialize the user input into a JSON object
         var jsonInput = JsonConvert.SerializeObject(new { user_input = userInput });
@@ -97,9 +94,9 @@ public class OpenStreetMapService
                 throw new HttpRequestException($"Flask API returned error: {response.StatusCode}");
             }
 
-            // Step 4: Read the Flask API response content and deserialize it into an object
+            // Step 4: Read the Flask API response content and deserialize it into SbertMatchResponse
             var responseContent = await response.Content.ReadAsStringAsync();
-            var matches = JsonConvert.DeserializeObject(responseContent);
+            var matches = JsonConvert.DeserializeObject<SbertMatchResponse>(responseContent);
 
             return matches;  // Return the matches from the Flask API
         }
@@ -109,4 +106,31 @@ public class OpenStreetMapService
             throw new HttpRequestException($"Error communicating with Flask API: {e.Message}");
         }
     }
+
+    public async Task<List<string>> GetAllNearbyPlaces(double latitude, double longitude, string userInput, int radius = 5000)
+    {
+        // Step 1: Call GetSbertMatches to get the top matches based on the user's input
+        var matches = await GetSbertMatches(userInput);
+
+        // Step 2: Initialize a list to hold all the nearby places found
+        var allNearbyPlaces = new List<string>();
+
+        // Step 3: Loop over each match (key-value pair) and find nearby places using the Overpass API
+        foreach (var match in matches.Top_Matches)
+        {
+            string key = match.Key;
+            string value = match.Value;
+
+            // Step 4: Call GetNearbyPlaces for each key-value pair
+            string nearbyPlacesResult = await GetNearbyPlaces(latitude, longitude, key, value, radius);
+
+            // Step 5: Add the result to the combined list
+            allNearbyPlaces.Add($"Nearby places for {key} = {value}:\n{nearbyPlacesResult}");
+        }
+
+        // Step 6: Return the combined results for all key-value pairs
+        return allNearbyPlaces;
+    }
+
+
 }

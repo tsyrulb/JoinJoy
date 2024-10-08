@@ -53,9 +53,49 @@ public class PlacesController : ControllerBase
         }
     }
 
-    // Input model to represent the JSON body
-    public class UserInputModel
+    // POST: api/places/nearby-all
+    [HttpPost("nearby-all")]
+    public async Task<IActionResult> GetAllNearbyPlaces([FromBody] UserLocationRequest request)
     {
-        public string UserInput { get; set; }
+        if (request == null || string.IsNullOrWhiteSpace(request.UserInput))
+        {
+            return BadRequest(new { error = "User input and location coordinates are required." });
+        }
+
+        try
+        {
+            // Call the service to find all nearby places for the given user input
+            var nearbyPlaces = await _osmService.GetAllNearbyPlaces(request.Latitude, request.Longitude, request.UserInput, request.Radius);
+
+            if (nearbyPlaces == null || !nearbyPlaces.Any())
+            {
+                return NotFound(new { message = "No nearby places found." });
+            }
+
+            // Return the combined list of all nearby places
+            return Ok(nearbyPlaces);
+        }
+        catch (HttpRequestException e)
+        {
+            return StatusCode(500, new { error = $"Error communicating with Overpass API: {e.Message}" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = $"Internal server error: {ex.Message}" });
+        }
     }
+}
+
+public class UserInputModel
+{
+    public string UserInput { get; set; }
+}
+
+// Request model for user input and location coordinates
+public class UserLocationRequest
+{
+    public string UserInput { get; set; } // User's search input
+    public double Latitude { get; set; }  // Latitude of the user's location
+    public double Longitude { get; set; } // Longitude of the user's location
+    public int Radius { get; set; } = 5000; // Optional: Search radius (default 5000 meters)
 }
