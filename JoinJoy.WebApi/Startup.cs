@@ -44,7 +44,6 @@ namespace JoinJoy.WebApi
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IPreferredDestinationRepository, PreferredDestinationRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ISubcategoryRepository, SubcategoryRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>(); // Ensure LocationRepository is registered
@@ -63,11 +62,9 @@ namespace JoinJoy.WebApi
             {
                 var userRepository = provider.GetRequiredService<IRepository<User>>();
                 var userSubcategoryRepository = provider.GetRequiredService<IRepository<UserSubcategory>>();
-                var userPreferredDestinationRepository = provider.GetRequiredService<IRepository<UserPreferredDestination>>();
                 return new UserService(
                     userRepository,
                     userSubcategoryRepository,
-                    userPreferredDestinationRepository,
                     googleApiKey
 
                 );
@@ -91,7 +88,6 @@ namespace JoinJoy.WebApi
             });
             services.AddScoped<IFeedbackRepository, FeedbackRepository>();
             services.AddScoped<IFeedbackService, FeedbackService>();
-            services.AddScoped<IPreferredDestinationService, PreferredDestinationService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();

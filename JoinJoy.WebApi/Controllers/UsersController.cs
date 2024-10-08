@@ -129,17 +129,6 @@ namespace JoinJoy.WebApi.Controllers
             }
             return Ok(result);
         }
-
-        [HttpPost("{userId}/preferredDestinations")]
-        public async Task<IActionResult> AddUserPreferredDestinations(int userId, [FromBody] List<UserPreferredDestination> preferredDestinations)
-        {
-            var result = await _userService.AddUserPreferredDestinationsAsync(userId, preferredDestinations);
-            if (!result.Success)
-            {
-                return BadRequest(result.Message);
-            }
-            return Ok(result.Message);
-        }
         
         [HttpPost("set-availability")]
         public async Task<IActionResult> SetAvailability(int userId, DayOfWeek unavailableDay, TimeSpan unavailableStartTime, TimeSpan unavailableEndTime)

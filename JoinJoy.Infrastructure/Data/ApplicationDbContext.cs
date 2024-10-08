@@ -13,8 +13,6 @@ namespace JoinJoy.Infrastructure.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Activity> Activities { get; set; }
         public DbSet<UserActivity> UserActivities { get; set; }
-        public DbSet<PreferredDestination> PreferredDestinations { get; set; }
-        public DbSet<UserPreferredDestination> UserPreferredDestinations { get; set; }
         public DbSet<Match> Matches { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
@@ -50,19 +48,6 @@ namespace JoinJoy.Infrastructure.Data
                 .HasOne(ua => ua.Activity)
                 .WithMany(a => a.UserActivities)
                 .HasForeignKey(ua => ua.ActivityId);
-
-            modelBuilder.Entity<UserPreferredDestination>()
-                .HasKey(upd => new { upd.UserId, upd.PreferredDestinationId });
-
-            modelBuilder.Entity<UserPreferredDestination>()
-                .HasOne(upd => upd.User)
-                .WithMany(u => u.UserPreferredDestinations)
-                .HasForeignKey(upd => upd.UserId);
-
-            modelBuilder.Entity<UserPreferredDestination>()
-                .HasOne(upd => upd.PreferredDestination)
-                .WithMany(pd => pd.UserPreferredDestinations)
-                .HasForeignKey(upd => upd.PreferredDestinationId);
 
             modelBuilder.Entity<UserSubcategory>()
                 .HasKey(us => new { us.UserId, us.SubcategoryId });

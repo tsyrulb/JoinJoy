@@ -15,18 +15,15 @@ namespace JoinJoy.Infrastructure.Services
     {
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<UserSubcategory> _userSubcategoryRepository;
-        private readonly IRepository<UserPreferredDestination> _userPreferredDestinationRepository;
         private readonly string _googleApiKey;
         public UserService(
             IRepository<User> userRepository,
             IRepository<UserSubcategory> userSubcategoryRepository,
-            IRepository<UserPreferredDestination> userPreferredDestinationRepository,
             string googleApiKey
             )
         {
             _userRepository = userRepository;
             _userSubcategoryRepository = userSubcategoryRepository;
-            _userPreferredDestinationRepository = userPreferredDestinationRepository;
             _googleApiKey = googleApiKey ?? throw new ArgumentNullException(nameof(googleApiKey));
         }
 
@@ -244,22 +241,6 @@ namespace JoinJoy.Infrastructure.Services
             return new ServiceResult { Success = true, Message = "User subcategory removed successfully" };
         }
 
-        public async Task<ServiceResult> AddUserPreferredDestinationsAsync(int userId, List<UserPreferredDestination> preferredDestinations)
-        {
-            var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null)
-            {
-                return new ServiceResult { Success = false, Message = "User not found" };
-            }
-
-            foreach (var destination in preferredDestinations)
-            {
-                destination.UserId = userId;
-                await _userPreferredDestinationRepository.AddAsync(destination);
-            }
-
-            return new ServiceResult { Success = true, Message = "User preferred destinations added successfully" };
-        }
 
         public Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, Location? location)
         {

@@ -14,7 +14,6 @@
         public TimeSpan? UnavailableStartTime { get; set; } // Start of unavailability
         public TimeSpan? UnavailableEndTime { get; set; } // End of unavailability
         public ICollection<UserSubcategory>? UserSubcategories { get; set; } // Many-to-many relationship with subcategories
-        public ICollection<UserPreferredDestination>? UserPreferredDestinations { get; set; }
         public double? DistanceWillingToTravel { get; set; }
 
         // Navigation properties
