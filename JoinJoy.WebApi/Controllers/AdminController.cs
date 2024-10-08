@@ -9,34 +9,18 @@ namespace JoinJoy.WebApi.Controllers
     [ApiController]
     public class AdminController : ControllerBase
     {
-        private readonly IUserService _userService;
-        private readonly IActivityService _activityService;
+        private readonly IAdminService _adminService;
 
-        public AdminController(IUserService userService, IActivityService activityService)
+        public AdminController(IAdminService adminService)
         {
-            _userService = userService;
-            _activityService = activityService;
+            _adminService = adminService;
         }
 
-        [HttpGet("users")]
-        public async Task<IActionResult> GetUsers()
+        // Promote a user to admin
+        [HttpPost("promote/{userId}")]
+        public async Task<IActionResult> PromoteUserToAdmin(int userId)
         {
-            var result = await _userService.GetAllUsersAsync();
-            return Ok(result);
-        }
-
-        // TODO::Implement GetActivities method
-        [HttpGet("activities")]
-        public async Task<IActionResult> GetActivities()
-        {
-            //var result = await _activityService.GetActivitiesAsync();
-            return Ok();
-        }
-
-        [HttpDelete("delete-user")]
-        public async Task<IActionResult> DeleteUser(int userId)
-        {
-            var result = await _userService.DeleteUserAsync(userId);
+            var result = await _adminService.PromoteUserToAdminAsync(userId);
             if (result.Success)
             {
                 return Ok(result);
@@ -44,15 +28,64 @@ namespace JoinJoy.WebApi.Controllers
             return BadRequest(result);
         }
 
-        [HttpDelete("delete-activity")]
+        // Deactivate a user
+        [HttpPost("deactivate/{userId}")]
+        public async Task<IActionResult> DeactivateUser(int userId)
+        {
+            var result = await _adminService.DeactivateUserAsync(userId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        // Delete an activity
+        [HttpDelete("activity/{activityId}")]
         public async Task<IActionResult> DeleteActivity(int activityId)
         {
-            var result = await _activityService.DeleteActivityAsync(activityId);
+            var result = await _adminService.DeleteActivityAsync(activityId);
             if (result.Success)
             {
                 return Ok(result);
             }
             return BadRequest(result);
+        }
+
+        // Delete a feedback
+        [HttpDelete("feedback/{feedbackId}")]
+        public async Task<IActionResult> DeleteFeedback(int feedbackId)
+        {
+            var result = await _adminService.DeleteFeedbackAsync(feedbackId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        // List all users
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _adminService.GetAllUsersAsync();
+            return Ok(users);
+        }
+
+        // List all activities
+        [HttpGet("activities")]
+        public async Task<IActionResult> GetAllActivities()
+        {
+            var activities = await _adminService.GetAllActivitiesAsync();
+            return Ok(activities);
+        }
+
+        // List all feedbacks
+        [HttpGet("feedbacks")]
+        public async Task<IActionResult> GetAllFeedbacks()
+        {
+            var feedbacks = await _adminService.GetAllFeedbacksAsync();
+            return Ok(feedbacks);
         }
     }
 }

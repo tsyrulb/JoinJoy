@@ -93,6 +93,7 @@ namespace JoinJoy.WebApi
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IPreferredDestinationService, PreferredDestinationService>();
             services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();
             services.AddLogging();
             // Add SignalR
