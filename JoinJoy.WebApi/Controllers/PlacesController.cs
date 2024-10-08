@@ -32,6 +32,7 @@ public class PlacesController : ControllerBase
 
         }
     }
+    
     // POST: api/places/user-input
     [HttpPost("user-input")]
     public async Task<IActionResult> PostUserInput([FromBody] UserInputModel inputModel)

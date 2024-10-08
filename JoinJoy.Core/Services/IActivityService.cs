@@ -13,5 +13,6 @@ namespace JoinJoy.Core.Interfaces
         Task<Activity> GetActivityByIdAsync(int activityId);
         Task<ServiceResult> DeleteActivityAsync(int activityId);
         Task<ServiceResult> AddUsersToActivityAsync(int activityId, List<int> userIds);
+        Task<ServiceResult> CreateActivityWithCoordinatesAsync(ActivityRequestWithCoordinates activityRequest);
     }
 }

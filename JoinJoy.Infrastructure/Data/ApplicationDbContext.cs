@@ -22,7 +22,6 @@ namespace JoinJoy.Infrastructure.Data
 
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Location> Locations { get; set; }
-        public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Category> Categories { get; set; }
 
         public DbSet<Subcategory> Subcategories { get; set; }
@@ -35,7 +34,6 @@ namespace JoinJoy.Infrastructure.Data
             // Apply all configurations
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new ActivityConfiguration());
-            modelBuilder.ApplyConfiguration(new ChatMessageConfiguration());
             modelBuilder.ApplyConfiguration(new FeedbackConfiguration());
             modelBuilder.ApplyConfiguration(new MessageConfiguration());
 

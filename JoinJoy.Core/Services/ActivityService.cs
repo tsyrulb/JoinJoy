@@ -82,6 +82,87 @@ namespace JoinJoy.Infrastructure.Services
                 return new ServiceResult { Success = false, Message = "Error creating activity: " + ex.Message };
             }
         }
+        public async Task<(string address, string placeId)> GetAddressFromCoordinatesAsync(double latitude, double longitude)
+        {
+            string requestUri = string.Format("https://geocode.maps.co/reverse?lat={0}&lon={1}&api_key={2}",
+                                              latitude, longitude, _geocodingApiKey);
+
+            try
+            {
+                WebRequest request = WebRequest.Create(requestUri);
+                WebResponse response = await request.GetResponseAsync();
+
+                using (var reader = new StreamReader(response.GetResponseStream()))
+                {
+                    string jsonResponse = await reader.ReadToEndAsync();
+                    var geoData = JsonConvert.DeserializeObject<GeocodeResponse>(jsonResponse);
+
+                    if (geoData != null)
+                    {
+                        string address = geoData.DisplayName;
+                        string placeId = geoData.PlaceId.ToString(); // Convert `place_id` to string
+
+                        return (address, placeId);
+                    }
+                    else
+                    {
+                        throw new Exception($"Reverse Geocoding API returned no results for the specified coordinates: ({latitude}, {longitude})");
+                    }
+                }
+            }
+            catch (WebException webEx)
+            {
+                throw new Exception($"Error calling Reverse Geocoding API: {webEx.Message}", webEx);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error parsing Reverse Geocoding API response: " + ex.Message, ex);
+            }
+        }
+
+        public async Task<ServiceResult> CreateActivityWithCoordinatesAsync(ActivityRequestWithCoordinates activityRequest)
+        {
+            try
+            {
+                // Get the address from the latitude and longitude using reverse geocoding
+                var (address, placeId) = await GetAddressFromCoordinatesAsync(activityRequest.Latitude, activityRequest.Longitude);
+
+                var newLocation = new Location
+                {
+                    Latitude = activityRequest.Latitude,
+                    Longitude = activityRequest.Longitude,
+                    Address = address,
+                    PlaceId = placeId
+                };
+
+                await _locationRepository.AddAsync(newLocation);
+
+                var activity = new Activity
+                {
+                    Name = activityRequest.Name,
+                    Description = activityRequest.Description,
+                    Date = activityRequest.Date,
+                    Location = newLocation,
+                    CreatedById = activityRequest.CreatedById
+                };
+
+                await _activityRepository.AddAsync(activity);
+
+                var userActivity = new UserActivity
+                {
+                    UserId = activityRequest.CreatedById,
+                    ActivityId = activity.Id
+                };
+
+                await _userActivityRepository.AddAsync(userActivity);
+
+                return new ServiceResult { Success = true, Message = "Activity created successfully" };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult { Success = false, Message = "Error creating activity: " + ex.Message };
+            }
+        }
 
         public async Task<ServiceResult> UpdateActivityAsync(int activityId, ActivityRequest activityRequest)
         {
@@ -230,7 +311,15 @@ namespace JoinJoy.Infrastructure.Services
             }
         }
 
-
-
     }
 }
+public class ActivityRequestWithCoordinates
+{
+    public string Name { get; set; } // Activity name
+    public string Description { get; set; } // Activity description
+    public DateTime Date { get; set; } // Date of the activity
+    public double Latitude { get; set; } // Latitude of the location
+    public double Longitude { get; set; } // Longitude of the location
+    public int CreatedById { get; set; } // User ID of the activity creator
+}
+

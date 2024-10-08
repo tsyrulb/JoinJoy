@@ -27,9 +27,5 @@
 
         public ICollection<Feedback>? Feedbacks { get; set; }
         public ICollection<Activity>? CreatedActivities { get; set; } // Added this line
-
-        // Separate collections for ChatMessages if they are indeed different from Messages
-        public ICollection<ChatMessage>? SentChatMessages { get; set; } // Sent chat messages
-        public ICollection<ChatMessage>? ReceivedChatMessages { get; set; } // Received chat messages
     }
 }

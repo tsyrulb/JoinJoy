@@ -11,7 +11,6 @@ namespace JoinJoy.Core.Interfaces
     public interface IUnitOfWork : IDisposable
     {
         IActivityRepository Activities { get; }
-        IChatMessageRepository ChatMessages { get; }
         IFeedbackRepository Feedbacks { get; }
         IMatchRepository Matches { get; }
         IMessageRepository Messages { get; }

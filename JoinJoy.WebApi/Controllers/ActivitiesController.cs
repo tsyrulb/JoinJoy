@@ -30,6 +30,25 @@ namespace JoinJoy.WebApi.Controllers
             return Ok(result.Message);
         }
 
+        // POST: api/activities/create-with-coordinates
+        [HttpPost("create-with-coordinates")]
+        public async Task<IActionResult> CreateActivityWithCoordinates([FromBody] ActivityRequestWithCoordinates request)
+        {
+            if (request == null)
+            {
+                return BadRequest("Request body is null.");
+            }
+
+            var result = await _activityService.CreateActivityWithCoordinatesAsync(request);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
         [HttpPut("{activityId}")]
         public async Task<IActionResult> UpdateActivity(int activityId, [FromBody] ActivityRequest activityRequest)
         {

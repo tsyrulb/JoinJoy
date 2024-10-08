@@ -4,7 +4,6 @@ using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Services;
 using JoinJoy.Infrastructure.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
-using JoinJoy.WebApi.Hubs;
 using JoinJoy.WebApi.Middleware;
 using JoinJoy.Infrastructure.Services;
 using JoinJoy.Core.Models;
@@ -54,6 +53,7 @@ namespace JoinJoy.WebApi
             // Register message service and repository
             services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<OpenStreetMapService>();
+            services.AddHttpClient<OpenStreetMapService>();
             services.AddScoped<IMessageRepository, MessageRepository>();  // Add this line
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IRepository<Conversation>, Repository<Conversation>>();
@@ -89,21 +89,8 @@ namespace JoinJoy.WebApi
                     geocodingApiKey
                 );
             });
-            // Register AIChatService with HttpClient
-            services.AddHttpClient<IAIChatService, AIChatService>(client =>
-            {
-                client.BaseAddress = new Uri("https://api-inference.huggingface.co/models/microsoft/phi-1_5");
-            }).ConfigurePrimaryHttpMessageHandler(() =>
-            {
-                return new HttpClientHandler
-                {
-                    AutomaticDecompression = System.Net.DecompressionMethods.GZip
-                };
-            });
-            services.AddHttpClient<FlaskApiService>(client =>
-            {
-                client.BaseAddress = new Uri("http://localhost:5000"); // Flask API base address
-            });
+            services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+            services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IPreferredDestinationService, PreferredDestinationService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();
@@ -155,7 +142,6 @@ namespace JoinJoy.WebApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHub<ChatHub>("/chathub");
             });
 
             // Ensure the database is seeded

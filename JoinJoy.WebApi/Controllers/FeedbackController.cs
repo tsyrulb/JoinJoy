@@ -27,11 +27,18 @@ namespace JoinJoy.WebApi.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("list")]
-        public async Task<IActionResult> ListFeedback(int userId)
+        [HttpGet("list-for-user/{userId}")]
+        public async Task<IActionResult> ListFeedbackForUser(int userId)
         {
-            var result = await _feedbackService.GetFeedbackAsync(userId);
-            return Ok(result);
+            var feedbacks = await _feedbackService.GetUserFeedbackAsync(userId);
+            return Ok(feedbacks);
+        }
+
+        [HttpGet("list-for-activity/{activityId}")]
+        public async Task<IActionResult> ListFeedbackForActivity(int activityId)
+        {
+            var feedbacks = await _feedbackService.GetFeedbackForActivityAsync(activityId);
+            return Ok(feedbacks);
         }
     }
 }
