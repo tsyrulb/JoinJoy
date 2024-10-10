@@ -29,6 +29,7 @@ namespace JoinJoy.WebApi
                     b => b.MigrationsAssembly("JoinJoy.Infrastructure")));
 
             var googleApiKey = Configuration["GoogleApiKey"];
+            var jwtSecret = Configuration["JwtSettings:Secret"];
             var geocodingApiKey = Configuration["GeocodingApi:ApiKey"];
             var huggingFaceApiKey = Configuration["HuggingFaceApiKey"];
             // Add CORS policy to allow Angular frontend
@@ -65,8 +66,8 @@ namespace JoinJoy.WebApi
                 return new UserService(
                     userRepository,
                     userSubcategoryRepository,
-                    googleApiKey
-
+                    googleApiKey,
+                    jwtSecret
                 );
             });
             services.AddScoped<IActivityService>(provider =>

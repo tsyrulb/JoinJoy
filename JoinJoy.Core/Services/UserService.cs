@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Models;
 using JoinJoy.Core.Services;
+using Microsoft.IdentityModel.Tokens;
 using DayOfWeek = JoinJoy.Core.Models.DayOfWeek;
 
 namespace JoinJoy.Infrastructure.Services
@@ -16,16 +19,20 @@ namespace JoinJoy.Infrastructure.Services
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<UserSubcategory> _userSubcategoryRepository;
         private readonly string _googleApiKey;
+        private readonly string _jwtSecret;
         public UserService(
             IRepository<User> userRepository,
             IRepository<UserSubcategory> userSubcategoryRepository,
-            string googleApiKey
+            string googleApiKey,
+            string jwtSecret
             )
         {
             _userRepository = userRepository;
             _userSubcategoryRepository = userSubcategoryRepository;
             _googleApiKey = googleApiKey ?? throw new ArgumentNullException(nameof(googleApiKey));
+            _jwtSecret = jwtSecret;
         }
+
 
         public async Task<ServiceResult> RegisterUserAsync(User user)
         {
@@ -43,9 +50,32 @@ namespace JoinJoy.Infrastructure.Services
                 Console.WriteLine("Invalid email or password");
                 return new ServiceResult { Success = false, Message = "Invalid email or password" };
             }
+
+            // Generate a JWT token (or another type of token) for the authenticated user
+            var token = GenerateJwtToken(user);
+
             Console.WriteLine("User logged in successfully");
-            return new ServiceResult { Success = true, Message = "User logged in successfully" };
+            return new ServiceResult { Success = true, Message = "User logged in successfully", Token = token };
         }
+
+        // This is an example method for generating a JWT token
+        private string GenerateJwtToken(User user)
+        {
+            var key = Encoding.ASCII.GetBytes(_jwtSecret);
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[] { new Claim("id", user.Id.ToString()) }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+
 
         public async Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address)
         {
@@ -55,7 +85,10 @@ namespace JoinJoy.Infrastructure.Services
                 return new ServiceResult { Success = false, Message = "User not found" };
             }
 
-            // Update user properties if new values are provided
+            // Log user details to ensure the correct user is fetched
+            Console.WriteLine($"Updating user {userId} with new details.");
+
+            // Update user properties
             if (!string.IsNullOrEmpty(name))
             {
                 user.Name = name;
@@ -68,7 +101,7 @@ namespace JoinJoy.Infrastructure.Services
 
             if (!string.IsNullOrEmpty(password))
             {
-                user.Password = password; // Ensure password is hashed
+                user.Password = password; // Consider hashing the password
             }
 
             if (!string.IsNullOrEmpty(profilePhoto))
@@ -94,16 +127,19 @@ namespace JoinJoy.Infrastructure.Services
                         PlaceId = "" // Optional: fetch and store PlaceId if needed
                     };
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Console.WriteLine($"Failed to fetch coordinates: {ex.Message}");
                     return new ServiceResult { Success = false, Message = "Failed to fetch coordinates for the provided address" };
                 }
             }
 
             await _userRepository.UpdateAsync(user);
 
+            Console.WriteLine($"User {userId} updated successfully.");
             return new ServiceResult { Success = true, Message = "User details updated successfully" };
         }
+
 
         //TODO: Implement this method
         // write method that update string bio in user         

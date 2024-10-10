@@ -36,14 +36,25 @@ namespace JoinJoy.WebApi.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string email, string password)
+        public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
-            var result = await _userService.LoginAsync(email, password);
+            var result = await _userService.LoginAsync(model.Email, model.Password);
+
             if (!result.Success)
             {
-                return Unauthorized(result.Message);
+                return Unauthorized(new { message = result.Message });
             }
-            return Ok(result.Message);
+
+            // Return the token and success message to the client
+            return Ok(new { token = result.Token, message = result.Message });
+        }
+
+
+        // Model for LoginRequest
+        public class LoginRequest
+        {
+            public string Email { get; set; }
+            public string Password { get; set; }
         }
 
         [HttpPut("{userId}/details")]
