@@ -19,13 +19,13 @@ namespace JoinJoy.WebApi.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> RegisterUser(string name, string email, string password)
+        public async Task<IActionResult> RegisterUser([FromBody] RegisterUserRequest model)
         {
             var user = new User
             {
-                Name = name,
-                Email = email,
-                Password = password,
+                Name = model.Name,
+                Email = model.Email,
+                Password = model.Password,
             };
             var result = await _userService.RegisterUserAsync(user);
             if (!result.Success)
@@ -34,6 +34,15 @@ namespace JoinJoy.WebApi.Controllers
             }
             return Ok(result.Message);
         }
+
+        // Model for RegisterUserRequest
+        public class RegisterUserRequest
+        {
+            public string Name { get; set; }
+            public string Email { get; set; }
+            public string Password { get; set; }
+        }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest model)
@@ -49,6 +58,16 @@ namespace JoinJoy.WebApi.Controllers
             return Ok(new { token = result.Token, message = result.Message });
         }
 
+        [HttpPut("{userId}/gender")]
+        public async Task<IActionResult> UpdateUserGender(int userId, [FromBody] string gender)
+        {
+            var result = await _userService.UpdateUserGenderAsync(userId, gender);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
 
         // Model for LoginRequest
         public class LoginRequest
@@ -66,7 +85,8 @@ namespace JoinJoy.WebApi.Controllers
                 updateUserRequest.Password,
                 updateUserRequest.ProfilePhoto,
                 updateUserRequest.DateOfBirth,
-                updateUserRequest.Address);
+                updateUserRequest.Address,
+                updateUserRequest.Gender);
             if (!result.Success)
             {
                 return BadRequest(result.Message);
@@ -74,6 +94,36 @@ namespace JoinJoy.WebApi.Controllers
             return Ok(result.Message);
         }
 
+        [HttpPut("{userId}/email")]
+        public async Task<IActionResult> UpdateUserEmail(int userId, [FromBody] string email)
+        {
+            var result = await _userService.UpdateUserEmailAsync(userId, email);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
+        [HttpPut("{userId}/password")]
+        public async Task<IActionResult> UpdateUserPassword(int userId, [FromBody] string password)
+        {
+            var result = await _userService.UpdateUserPasswordAsync(userId, password);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
+        [HttpPut("{userId}/profilePhoto")]
+        public async Task<IActionResult> UpdateUserProfilePhoto(int userId, [FromBody] string profilePhoto)
+        {
+            var result = await _userService.UpdateUserProfilePhotoAsync(userId, profilePhoto);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetAllUsers()
@@ -152,7 +202,6 @@ namespace JoinJoy.WebApi.Controllers
             }
             return BadRequest(result.Message);
         }
-
 
         [HttpPut("{userId}/distance")]
         public async Task<IActionResult> UpdateUserDistanceWillingToTravel(int userId, [FromBody] double distance)

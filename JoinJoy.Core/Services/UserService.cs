@@ -77,7 +77,7 @@ namespace JoinJoy.Infrastructure.Services
 
 
 
-        public async Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address)
+        public async Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address, string? gender)
         {
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
@@ -85,62 +85,90 @@ namespace JoinJoy.Infrastructure.Services
                 return new ServiceResult { Success = false, Message = "User not found" };
             }
 
-            // Log user details to ensure the correct user is fetched
-            Console.WriteLine($"Updating user {userId} with new details.");
+            if (!string.IsNullOrEmpty(name)) user.Name = name;
+            if (!string.IsNullOrEmpty(email)) user.Email = email;
+            if (!string.IsNullOrEmpty(password)) user.Password = password;
+            if (!string.IsNullOrEmpty(profilePhoto)) user.ProfilePhoto = profilePhoto;
+            if (dateOfBirth.HasValue) user.DateOfBirth = dateOfBirth.Value;
 
-            // Update user properties
-            if (!string.IsNullOrEmpty(name))
+            // Include the gender check
+            if (!string.IsNullOrEmpty(gender))
             {
-                user.Name = name;
+                var validGenders = new List<string> { "Male", "Female", "Other" };
+                if (!validGenders.Contains(gender))
+                {
+                    return new ServiceResult { Success = false, Message = "Invalid gender value" };
+                }
+                user.Gender = gender;
             }
 
-            if (!string.IsNullOrEmpty(email))
-            {
-                user.Email = email;
-            }
-
-            if (!string.IsNullOrEmpty(password))
-            {
-                user.Password = password; // Consider hashing the password
-            }
-
-            if (!string.IsNullOrEmpty(profilePhoto))
-            {
-                user.ProfilePhoto = profilePhoto;
-            }
-
-            if (dateOfBirth.HasValue)
-            {
-                user.DateOfBirth = dateOfBirth.Value;
-            }
-
+            // Update location based on address
             if (!string.IsNullOrEmpty(address))
             {
-                try
+                var (latitude, longitude) = await GetCoordinatesAsync(address);
+                user.Location = new Location
                 {
-                    var (latitude, longitude) = await GetCoordinatesAsync(address);
-                    user.Location = new Location
-                    {
-                        Latitude = latitude,
-                        Longitude = longitude,
-                        Address = address,
-                        PlaceId = "" // Optional: fetch and store PlaceId if needed
-                    };
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to fetch coordinates: {ex.Message}");
-                    return new ServiceResult { Success = false, Message = "Failed to fetch coordinates for the provided address" };
-                }
+                    Latitude = latitude,
+                    Longitude = longitude,
+                    Address = address
+                };
             }
 
             await _userRepository.UpdateAsync(user);
-
-            Console.WriteLine($"User {userId} updated successfully.");
             return new ServiceResult { Success = true, Message = "User details updated successfully" };
         }
 
+        // Granular update function for email
+        public async Task<ServiceResult> UpdateUserEmailAsync(int userId, string email)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null) return new ServiceResult { Success = false, Message = "User not found" };
 
+            user.Email = email;
+            await _userRepository.UpdateAsync(user);
+            return new ServiceResult { Success = true, Message = "Email updated successfully" };
+        }
+        public async Task<ServiceResult> UpdateUserGenderAsync(int userId, string gender)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return new ServiceResult { Success = false, Message = "User not found" };
+            }
+
+            // Assuming you want to restrict gender to "Male", "Female", or "Other"
+            var validGenders = new List<string> { "Male", "Female", "Other" };
+            if (!validGenders.Contains(gender))
+            {
+                return new ServiceResult { Success = false, Message = "Invalid gender value" };
+            }
+
+            user.Gender = gender;
+            await _userRepository.UpdateAsync(user);
+            return new ServiceResult { Success = true, Message = "Gender updated successfully" };
+        }
+
+        // Granular update function for password
+        public async Task<ServiceResult> UpdateUserPasswordAsync(int userId, string password)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null) return new ServiceResult { Success = false, Message = "User not found" };
+
+            user.Password = password; // Consider hashing the password
+            await _userRepository.UpdateAsync(user);
+            return new ServiceResult { Success = true, Message = "Password updated successfully" };
+        }
+
+        // Granular update function for profile photo
+        public async Task<ServiceResult> UpdateUserProfilePhotoAsync(int userId, string profilePhoto)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null) return new ServiceResult { Success = false, Message = "User not found" };
+
+            user.ProfilePhoto = profilePhoto;
+            await _userRepository.UpdateAsync(user);
+            return new ServiceResult { Success = true, Message = "Profile photo updated successfully" };
+        }
         //TODO: Implement this method
         // write method that update string bio in user         
         public async Task<ServiceResult> UpdateUserDetailsAsync(int userId, string bio)

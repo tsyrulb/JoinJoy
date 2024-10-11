@@ -8,5 +8,7 @@ public class UpdateUserRequest
     public string? ProfilePhoto { get; set; }
     public DateTime? DateOfBirth { get; set; }
     public string? Address { get; set; } // Address field
+
+    public string? Gender { get; set;}
 }
 

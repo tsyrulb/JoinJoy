@@ -11,11 +11,15 @@ namespace JoinJoy.Core.Services
         Task<ServiceResult> UpdateUserAsync(User user);
         Task<IEnumerable<User>> GetAllUsersAsync();
         Task<User> GetUserByIdAsync(int userId);
+        Task<ServiceResult> UpdateUserGenderAsync(int userId, string gender);
         Task<ServiceResult> DeleteUserAsync(int userId);
+        Task<ServiceResult> UpdateUserEmailAsync(int userId, string email);
+        Task<ServiceResult> UpdateUserPasswordAsync(int userId, string password);
+        Task<ServiceResult> UpdateUserProfilePhotoAsync(int userId, string profilePhoto);
         Task<ServiceResult> AddUserSubcategoriesAsync(int userId, List<UserSubcategoryDto> subcategoryIds);
         Task<ServiceResult> RemoveUserSubcategoryAsync(int userId, int subcategoryId);
         Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, Location? location);
-        Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address);
+        Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address, string? gender);
         Task<ServiceResult> UpdateUserDistanceWillingToTravelAsync(int userId, double distance);
         Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId);
         Task<bool> IsUserAvailableAsync(int userId, DateTime currentTime);

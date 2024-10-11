@@ -10,6 +10,7 @@
         public DateTime? DateOfBirth { get; set; } // User's date of birth
         public bool? IsAdmin { get; set; }
         public Location? Location { get; set; }
+        public string? Gender { get; set; } // Male or Female, or consider enum for better typing
         public DayOfWeek? UnavailableDay { get; set; } // Nullable in case user has no unavailability
         public TimeSpan? UnavailableStartTime { get; set; } // Start of unavailability
         public TimeSpan? UnavailableEndTime { get; set; } // End of unavailability
