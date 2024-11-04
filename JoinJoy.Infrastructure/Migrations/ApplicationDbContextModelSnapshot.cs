@@ -52,7 +52,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.ToTable("Activities");
+                    b.ToTable("Activities", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.Category", b =>
@@ -69,7 +69,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.Conversation", b =>
@@ -85,7 +85,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Conversations");
+                    b.ToTable("Conversations", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.Feedback", b =>
@@ -121,7 +121,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Feedbacks");
+                    b.ToTable("Feedbacks", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.Location", b =>
@@ -147,7 +147,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Locations");
+                    b.ToTable("Locations", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.Match", b =>
@@ -184,7 +184,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasIndex("UserId1");
 
-                    b.ToTable("Matches");
+                    b.ToTable("Matches", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.Message", b =>
@@ -223,7 +223,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.Subcategory", b =>
@@ -245,7 +245,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Subcategories");
+                    b.ToTable("Subcategories", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.User", b =>
@@ -303,7 +303,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.UserActivity", b =>
@@ -318,7 +318,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasIndex("ActivityId");
 
-                    b.ToTable("UserActivities");
+                    b.ToTable("UserActivities", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.UserConversation", b =>
@@ -333,7 +333,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasIndex("ConversationId");
 
-                    b.ToTable("UserConversations");
+                    b.ToTable("UserConversations", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.UserSubcategory", b =>
@@ -351,7 +351,7 @@ namespace JoinJoy.Infrastructure.Migrations
 
                     b.HasIndex("SubcategoryId");
 
-                    b.ToTable("UserSubcategories");
+                    b.ToTable("UserSubcategories", (string)null);
                 });
 
             modelBuilder.Entity("JoinJoy.Core.Models.Activity", b =>

@@ -20,17 +20,20 @@ namespace JoinJoy.Infrastructure.Services
         private readonly IRepository<UserSubcategory> _userSubcategoryRepository;
         private readonly string _googleApiKey;
         private readonly string _jwtSecret;
+        private readonly ILocationRepository _locationRepository;
         public UserService(
             IRepository<User> userRepository,
             IRepository<UserSubcategory> userSubcategoryRepository,
             string googleApiKey,
-            string jwtSecret
+            string jwtSecret,
+            ILocationRepository locationRepository
             )
         {
             _userRepository = userRepository;
             _userSubcategoryRepository = userSubcategoryRepository;
             _googleApiKey = googleApiKey ?? throw new ArgumentNullException(nameof(googleApiKey));
             _jwtSecret = jwtSecret;
+            _locationRepository = locationRepository;
         }
 
 
@@ -75,8 +78,6 @@ namespace JoinJoy.Infrastructure.Services
             return tokenHandler.WriteToken(token);
         }
 
-
-
         public async Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address, string? gender)
         {
             var user = await _userRepository.GetByIdAsync(userId);
@@ -87,34 +88,41 @@ namespace JoinJoy.Infrastructure.Services
 
             if (!string.IsNullOrEmpty(name)) user.Name = name;
             if (!string.IsNullOrEmpty(email)) user.Email = email;
-            if (!string.IsNullOrEmpty(password)) user.Password = password;
+            if (!string.IsNullOrEmpty(password)) user.Password = password; // Consider hashing the password
             if (!string.IsNullOrEmpty(profilePhoto)) user.ProfilePhoto = profilePhoto;
             if (dateOfBirth.HasValue) user.DateOfBirth = dateOfBirth.Value;
 
-            // Include the gender check
-            if (!string.IsNullOrEmpty(gender))
+            // Include gender validation
+            var validGenders = new List<string> { "Male", "Female", "Other" };
+            if (!string.IsNullOrEmpty(gender) && validGenders.Contains(gender))
             {
-                var validGenders = new List<string> { "Male", "Female", "Other" };
-                if (!validGenders.Contains(gender))
-                {
-                    return new ServiceResult { Success = false, Message = "Invalid gender value" };
-                }
                 user.Gender = gender;
             }
 
-            // Update location based on address
+            // Update location based on address if provided
             if (!string.IsNullOrEmpty(address))
             {
-                var (latitude, longitude) = await GetCoordinatesAsync(address);
-                user.Location = new Location
+                try
                 {
-                    Latitude = latitude,
-                    Longitude = longitude,
-                    Address = address
-                };
+                    var (latitude, longitude) = await GetCoordinatesAsync(address);
+                    user.Location = new Location
+                    {
+                        Latitude = latitude,
+                        Longitude = longitude,
+                        Address = address
+                    };
+                    
+                    // Assuming _locationRepository is injected
+                    await _locationRepository.AddOrUpdateAsync(user.Location);
+                }
+                catch (Exception ex)
+                {
+                    return new ServiceResult { Success = false, Message = $"Failed to fetch coordinates for the provided address: {ex.Message}" };
+                }
             }
 
             await _userRepository.UpdateAsync(user);
+
             return new ServiceResult { Success = true, Message = "User details updated successfully" };
         }
 
@@ -241,8 +249,6 @@ namespace JoinJoy.Infrastructure.Services
             return new ServiceResult { Success = true, Message = "User deleted successfully" };
         }
 
-        //public async Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId);
-
         public async Task<bool> IsUserAvailableAsync(int userId, DateTime currentTime)
         {
             var user = await _userRepository.GetByIdAsync(userId);
@@ -305,16 +311,28 @@ namespace JoinJoy.Infrastructure.Services
             return new ServiceResult { Success = true, Message = "User subcategory removed successfully" };
         }
 
-
-        public Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, Location? location)
+        public async Task<ServiceResult> AddUserSubcategoriesAsync(int userId, List<int> subcategoryIds)
         {
-            throw new NotImplementedException();
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return new ServiceResult { Success = false, Message = "User not found" };
+            }
+
+            foreach (var subcategoryId in subcategoryIds)
+            {
+                var userSubcategory = new UserSubcategory
+                {
+                    UserId = userId,
+                    SubcategoryId = subcategoryId,
+                    Weight = 1  // Default weight; modify as necessary
+                };
+                await _userSubcategoryRepository.AddAsync(userSubcategory);
+            }
+
+            return new ServiceResult { Success = true, Message = "User subcategories added successfully" };
         }
 
-        public Task<ServiceResult> AddUserSubcategoriesAsync(int userId, List<int> subcategoryIds)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<ServiceResult> UpdateUserDistanceWillingToTravelAsync(int userId, double distance)
         {
@@ -351,9 +369,11 @@ namespace JoinJoy.Infrastructure.Services
         }
 
 
-        public Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId)
+        public async Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId)
         {
-            throw new NotImplementedException();
+            var userSubcategories = await _userSubcategoryRepository.FindAsync(us => us.UserId == userId);
+            return userSubcategories;
         }
+
     }
 }

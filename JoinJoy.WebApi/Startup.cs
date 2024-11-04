@@ -62,12 +62,14 @@ namespace JoinJoy.WebApi
             services.AddScoped<IUserService>(provider =>
             {
                 var userRepository = provider.GetRequiredService<IRepository<User>>();
+                var locationRepository = provider.GetRequiredService<ILocationRepository>();
                 var userSubcategoryRepository = provider.GetRequiredService<IRepository<UserSubcategory>>();
                 return new UserService(
                     userRepository,
                     userSubcategoryRepository,
                     googleApiKey,
-                    jwtSecret
+                    jwtSecret,
+                    locationRepository
                 );
             });
             services.AddScoped<IActivityService>(provider =>
@@ -89,6 +91,8 @@ namespace JoinJoy.WebApi
             });
             services.AddScoped<IFeedbackRepository, FeedbackRepository>();
             services.AddScoped<IFeedbackService, FeedbackService>();
+            services.AddScoped<ILocationService, LocationService>();
+
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();

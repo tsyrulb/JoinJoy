@@ -5,6 +5,8 @@ namespace JoinJoy.Core.Interfaces
 {
     public interface ILocationRepository : IRepository<Location>
     {
+        Task<Location> AddOrUpdateAsync(Location location);
+
         Task<bool> IsLocationReferencedAsync(int locationId);
     }
 }

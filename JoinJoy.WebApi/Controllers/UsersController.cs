@@ -231,5 +231,8 @@ namespace JoinJoy.WebApi.Controllers
                 return Ok(new { available = false, message = "User is not available" });
             }
         }
+
+        
+
     }
 }
