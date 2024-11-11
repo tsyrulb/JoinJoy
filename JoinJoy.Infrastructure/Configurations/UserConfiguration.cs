@@ -28,6 +28,12 @@ namespace JoinJoy.Infrastructure.Configurations
             builder.Property(u => u.ProfilePhoto)
                    .HasMaxLength(200);
 
+            builder.HasOne(u => u.Location)
+                .WithMany() // Assuming Location does not have a collection of Users
+                .HasForeignKey(u => u.LocationId)
+                .OnDelete(DeleteBehavior.Restrict); // Or another behavior based on your needs
+
+
             builder.HasMany(u => u.UserActivities)
                    .WithOne(ua => ua.User)
                    .HasForeignKey(ua => ua.UserId)

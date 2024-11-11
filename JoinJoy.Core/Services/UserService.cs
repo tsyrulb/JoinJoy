@@ -105,15 +105,31 @@ namespace JoinJoy.Infrastructure.Services
                 try
                 {
                     var (latitude, longitude) = await GetCoordinatesAsync(address);
-                    user.Location = new Location
+
+                    // Check if the location already exists
+                    var existingLocation = await _locationRepository.FindAsync(
+                        loc => loc.Latitude == latitude && loc.Longitude == longitude);
+
+                    if (existingLocation.Any())
                     {
-                        Latitude = latitude,
-                        Longitude = longitude,
-                        Address = address
-                    };
-                    
-                    // Assuming _locationRepository is injected
-                    await _locationRepository.AddOrUpdateAsync(user.Location);
+                        // Use existing location
+                        user.LocationId = existingLocation.First().Id;
+                    }
+                    else
+                    {
+                        // Create new location if it does not exist
+                        var newLocation = new Location
+                        {
+                            Latitude = latitude,
+                            Longitude = longitude,
+                            Address = address
+                        };
+
+                        await _locationRepository.AddAsync(newLocation);
+                        await _locationRepository.SaveChangesAsync();
+
+                        user.LocationId = newLocation.Id;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -124,6 +140,19 @@ namespace JoinJoy.Infrastructure.Services
             await _userRepository.UpdateAsync(user);
 
             return new ServiceResult { Success = true, Message = "User details updated successfully" };
+        }
+        public async Task<Location?> GetUserLocationAsync(int userId)
+        {
+            // Fetch the user to get the LocationId
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null || user.LocationId == null)  // Ensure LocationId is not null
+            {
+                return null;
+            }
+
+            // Use the LocationId to fetch the Location from the location repository
+            var location = await _locationRepository.GetByIdAsync(user.LocationId);
+            return location;
         }
 
         // Granular update function for email

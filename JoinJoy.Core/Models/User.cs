@@ -1,4 +1,6 @@
-﻿namespace JoinJoy.Core.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace JoinJoy.Core.Models
 {
     public class User
     {
@@ -9,6 +11,9 @@
         public string? ProfilePhoto { get; set; }
         public DateTime? DateOfBirth { get; set; } // User's date of birth
         public bool? IsAdmin { get; set; }
+        public int LocationId { get; set; }
+
+        [ForeignKey("LocationId")]
         public Location? Location { get; set; }
         public string? Gender { get; set; } // Male or Female, or consider enum for better typing
         public DayOfWeek? UnavailableDay { get; set; } // Nullable in case user has no unavailability

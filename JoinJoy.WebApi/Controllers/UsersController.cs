@@ -232,7 +232,19 @@ namespace JoinJoy.WebApi.Controllers
             }
         }
 
-        
+        [HttpGet("{userId}/location")]
+        public async Task<IActionResult> GetUserLocation(int userId)
+        {
+            var location = await _userService.GetUserLocationAsync(userId);
+            if (location == null)
+            {
+                return NotFound("User or location not found");
+            }
+
+            return Ok(location);
+        }
+
+
 
     }
 }

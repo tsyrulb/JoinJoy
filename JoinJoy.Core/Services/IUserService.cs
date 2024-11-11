@@ -23,5 +23,6 @@ namespace JoinJoy.Core.Services
         Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId);
         Task<bool> IsUserAvailableAsync(int userId, DateTime currentTime);
         Task<ServiceResult> SetUserAvailabilityAsync(int userId, Models.DayOfWeek unavailableDay, TimeSpan unavailableStartTime, TimeSpan unavailableEndTime);
+        Task<Location?> GetUserLocationAsync(int userId);
     }
 }
