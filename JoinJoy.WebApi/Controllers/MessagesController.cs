@@ -3,9 +3,12 @@ using JoinJoy.Core.Services;
 using JoinJoy.Core.Models;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace JoinJoy.WebApi.Controllers
 {
+    [Authorize] // Require authentication for all actions in this controller
     [Route("api/[controller]")]
     [ApiController]
     public class MessagesController : ControllerBase
@@ -17,36 +20,65 @@ namespace JoinJoy.WebApi.Controllers
             _messageService = messageService;
         }
 
-        // POST: api/messages/send
         [HttpPost("send")]
-        public async Task<IActionResult> SendMessage([FromBody] Message message)
+        public async Task<IActionResult> SendMessage([FromBody] MessageRequest messageRequest)
         {
-            var result = await _messageService.SendMessageAsync(message);
-            if (result.Success)
+            if (int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
             {
-                return Ok(result);
+                messageRequest.SenderId = userId;
+
+                // Send a message to each receiver
+                foreach (var receiverId in messageRequest.ReceiverIds)
+                {
+                    var message = new Message
+                    {
+                        SenderId = messageRequest.SenderId,
+                        ReceiverId = receiverId,
+                        ConversationId = messageRequest.ConversationId,
+                        Content = messageRequest.Content,
+                        Timestamp = DateTime.UtcNow,
+                        IsRead = false
+                    };
+
+                    var result = await _messageService.SendMessageAsync(message);
+                    if (!result.Success)
+                    {
+                        return BadRequest(result);
+                    }
+                }
+
+                return Ok(new { Success = true, Message = "Messages sent successfully" });
             }
-            return BadRequest(result);
+            return Unauthorized("User ID is missing or invalid in token.");
         }
+
 
         // GET: api/messages/conversation/{conversationId}
         [HttpGet("conversation/{conversationId}")]
         public async Task<IActionResult> GetMessagesForConversation(int conversationId)
         {
-            var messages = await _messageService.GetMessagesForConversationAsync(conversationId);
-            return Ok(messages);
+            if (int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                var messages = await _messageService.GetMessagesForConversationAsync(conversationId);
+                return Ok(messages);
+            }
+            return Unauthorized("User ID is missing or invalid in token.");
         }
 
-        // POST: api/messages/mark-read/{conversationId}/user/{userId}
-        [HttpPost("mark-read/{conversationId}/user/{userId}")]
-        public async Task<IActionResult> MarkMessagesAsRead(int conversationId, int userId)
+        // POST: api/messages/mark-read/{conversationId}
+        [HttpPost("mark-read/{conversationId}")]
+        public async Task<IActionResult> MarkMessagesAsRead(int conversationId)
         {
-            var result = await _messageService.MarkMessagesAsReadAsync(conversationId, userId);
-            if (result.Success)
+            if (int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
             {
-                return Ok(result);
+                var result = await _messageService.MarkMessagesAsReadAsync(conversationId, userId);
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+                return BadRequest(result);
             }
-            return BadRequest(result);
+            return Unauthorized("User ID is missing or invalid in token.");
         }
 
         [HttpPost("add-users-to-conversation")]
@@ -63,12 +95,16 @@ namespace JoinJoy.WebApi.Controllers
         }
 
 
-        // GET: api/messages/conversations/user/{userId}
-        [HttpGet("conversations/user/{userId}")]
-        public async Task<IActionResult> GetConversationsForUser(int userId)
+        // GET: api/messages/conversations
+        [HttpGet("conversations")]
+        public async Task<IActionResult> GetConversationsForUser()
         {
-            var conversations = await _messageService.GetConversationsForUserAsync(userId);
-            return Ok(conversations);
+            if (int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                var conversations = await _messageService.GetConversationsForUserAsync(userId);
+                return Ok(conversations);
+            }
+            return Unauthorized("User ID is missing or invalid in token.");
         }
 
         // DELETE: api/messages/{messageId}

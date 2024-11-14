@@ -7,4 +7,8 @@
         public string Token { get; set; }  // Add Token property here
 
     }
+    public class ServiceResult<T> : ServiceResult
+    {
+        public T Data { get; set; }
+    }
 }

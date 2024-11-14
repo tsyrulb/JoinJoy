@@ -9,6 +9,11 @@ using JoinJoy.Infrastructure.Services;
 using JoinJoy.Core.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Security.Claims;
 
 namespace JoinJoy.WebApi
 {
@@ -30,6 +35,35 @@ namespace JoinJoy.WebApi
 
             var googleApiKey = Configuration["GoogleApiKey"];
             var jwtSecret = Configuration["JwtSettings:Secret"];
+            // CORS policy for Angular frontend
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAngular", builder =>
+                {
+                    builder.WithOrigins("http://localhost:4200")  // Angular URL
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
+                });
+            });
+            // Configure JWT authentication
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
+                    NameClaimType = ClaimTypes.NameIdentifier  // Sets the default claim for user identity
+
+                };
+            });
             var geocodingApiKey = Configuration["GeocodingApi:ApiKey"];
             var huggingFaceApiKey = Configuration["HuggingFaceApiKey"];
             // Add CORS policy to allow Angular frontend
@@ -44,6 +78,10 @@ namespace JoinJoy.WebApi
             });
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddSingleton(new BlobStorageService(
+                Configuration["AzureBlobStorage:ConnectionString"],
+                Configuration["AzureBlobStorage:ContainerName"]
+            ));
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ISubcategoryRepository, SubcategoryRepository>();
@@ -64,12 +102,14 @@ namespace JoinJoy.WebApi
                 var userRepository = provider.GetRequiredService<IRepository<User>>();
                 var locationRepository = provider.GetRequiredService<ILocationRepository>();
                 var userSubcategoryRepository = provider.GetRequiredService<IRepository<UserSubcategory>>();
+                var blobStorageService = provider.GetRequiredService<BlobStorageService>();
                 return new UserService(
                     userRepository,
                     userSubcategoryRepository,
                     googleApiKey,
                     jwtSecret,
-                    locationRepository
+                    locationRepository,
+                    blobStorageService
                 );
             });
             services.AddScoped<IActivityService>(provider =>
@@ -92,10 +132,14 @@ namespace JoinJoy.WebApi
             services.AddScoped<IFeedbackRepository, FeedbackRepository>();
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<ILocationService, LocationService>();
-
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();
+            
+
+
+            services.AddAuthorization();
+
             services.AddLogging();
             // Add SignalR
             services.AddSignalR();
@@ -122,9 +166,12 @@ namespace JoinJoy.WebApi
 
             app.UseHttpsRedirection();
             app.UseCors("AllowAngular");  // Enable the CORS policy
+            app.UseAuthentication();
+
             app.UseRouting();
 
-            app.UseAuthentication();
+
+
             app.UseAuthorization();
 
             app.UseMiddleware<AuthenticationMiddleware>();

@@ -22,8 +22,7 @@ public class MessageService : IMessageService
         _logger = logger; // Assign the logger
 
     }
-
-public async Task<ServiceResult> SendMessageAsync(Message message)
+    public async Task<ServiceResult> SendMessageAsync(Message message)
     {
         try
         {

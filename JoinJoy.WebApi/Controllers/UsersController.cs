@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using JoinJoy.Core.Models;
 using JoinJoy.Core.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DayOfWeek = JoinJoy.Core.Models.DayOfWeek;
 
@@ -184,7 +185,7 @@ namespace JoinJoy.WebApi.Controllers
         public async Task<ActionResult<UserSubcategory>> GeteUserSubcategory(int userId)
         {
             var result = await _userService.GetSubcategoriesByUserIdAsync(userId);
-            if (result != null)
+            if (result == null || !result.Any())
             {
                 return BadRequest();
             }
@@ -245,6 +246,36 @@ namespace JoinJoy.WebApi.Controllers
         }
 
 
+        [HttpPost("{userId}/profile-photo")]
+        public async Task<IActionResult> UploadUserPhoto(int userId, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded.");
+            }
+
+            using var stream = file.OpenReadStream();
+            var result = await _userService.UploadUserProfilePhotoAsync(userId, stream, file.FileName);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+
+            return Ok(new { message = result.Message, photoUrl = result.Data });
+        }
+
+
+        [HttpDelete("{userId}/profile-photo")]
+        public async Task<IActionResult> DeleteProfilePhoto(int userId)
+        {
+            var result = await _userService.DeleteUserProfilePhotoAsync(userId);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+
+            return Ok(result.Message);
+        }
 
     }
 }

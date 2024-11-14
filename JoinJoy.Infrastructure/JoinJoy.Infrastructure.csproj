@@ -9,10 +9,12 @@
   <ItemGroup>
     <Folder Include="Migrations\" />
     <PackageReference Include="Azure.Identity" Version="1.12.1" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.22.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="8.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.0" />
 	<ProjectReference Include="..\JoinJoy.Core\JoinJoy.Core.csproj" />
   </ItemGroup>

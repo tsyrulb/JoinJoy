@@ -24,5 +24,7 @@ namespace JoinJoy.Core.Services
         Task<bool> IsUserAvailableAsync(int userId, DateTime currentTime);
         Task<ServiceResult> SetUserAvailabilityAsync(int userId, Models.DayOfWeek unavailableDay, TimeSpan unavailableStartTime, TimeSpan unavailableEndTime);
         Task<Location?> GetUserLocationAsync(int userId);
+        Task<ServiceResult> DeleteUserProfilePhotoAsync(int userId);
+        Task<ServiceResult<string>> UploadUserProfilePhotoAsync(int userId, Stream photoStream, string fileName);
     }
 }

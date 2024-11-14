@@ -36,4 +36,13 @@ namespace JoinJoy.Core.Models
         [JsonIgnore]  // Ignore during validation
         public Conversation? Conversation { get; set; } // Reference to the conversation
     }
+
+    public class MessageRequest
+    {
+        public int SenderId { get; set; }
+        public int ConversationId { get; set; }
+        public string Content { get; set; }
+        public List<int> ReceiverIds { get; set; } = new List<int>();
+    }
+
 }

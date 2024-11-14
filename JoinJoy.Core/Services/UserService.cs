@@ -21,12 +21,14 @@ namespace JoinJoy.Infrastructure.Services
         private readonly string _googleApiKey;
         private readonly string _jwtSecret;
         private readonly ILocationRepository _locationRepository;
+        private readonly BlobStorageService _blobStorageService;
         public UserService(
             IRepository<User> userRepository,
             IRepository<UserSubcategory> userSubcategoryRepository,
             string googleApiKey,
             string jwtSecret,
-            ILocationRepository locationRepository
+            ILocationRepository locationRepository,
+            BlobStorageService blobStorageService
             )
         {
             _userRepository = userRepository;
@@ -34,6 +36,7 @@ namespace JoinJoy.Infrastructure.Services
             _googleApiKey = googleApiKey ?? throw new ArgumentNullException(nameof(googleApiKey));
             _jwtSecret = jwtSecret;
             _locationRepository = locationRepository;
+            _blobStorageService = blobStorageService;
         }
 
 
@@ -69,13 +72,46 @@ namespace JoinJoy.Infrastructure.Services
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] { new Claim("id", user.Id.ToString()) }),
+                Subject = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()) }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        public async Task<ServiceResult<string>> UploadUserProfilePhotoAsync(int userId, Stream photoStream, string fileName)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return new ServiceResult<string> { Success = false, Message = "User not found" };
+            }
+
+            var photoUrl = await _blobStorageService.UploadProfilePhotoAsync(photoStream, fileName);
+            user.ProfilePhoto = photoUrl;
+            await _userRepository.UpdateAsync(user);
+
+            return new ServiceResult<string> { Success = true, Message = "Profile photo uploaded successfully", Data = photoUrl };
+        }
+
+
+        public async Task<ServiceResult> DeleteUserProfilePhotoAsync(int userId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null || string.IsNullOrEmpty(user.ProfilePhoto))
+            {
+                return new ServiceResult { Success = false, Message = "User or profile photo not found" };
+            }
+
+            var fileName = Path.GetFileName(user.ProfilePhoto);
+            await _blobStorageService.DeleteProfilePhotoAsync(fileName);
+
+            user.ProfilePhoto = null;
+            await _userRepository.UpdateAsync(user);
+
+            return new ServiceResult { Success = true, Message = "Profile photo deleted successfully" };
         }
 
         public async Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address, string? gender)
@@ -401,7 +437,7 @@ namespace JoinJoy.Infrastructure.Services
         public async Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId)
         {
             var userSubcategories = await _userSubcategoryRepository.FindAsync(us => us.UserId == userId);
-            return userSubcategories;
+            return userSubcategories ?? new List<UserSubcategory>();
         }
 
     }
