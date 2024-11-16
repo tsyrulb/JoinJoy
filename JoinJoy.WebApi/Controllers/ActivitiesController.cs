@@ -1,12 +1,15 @@
 ﻿using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Models;
 using JoinJoy.Core.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace JoinJoy.WebApi.Controllers
 {
+    [Authorize]  // Require authentication for all actions in this controller
     [ApiController]
     [Route("api/[controller]")]
     public class ActivitiesController : ControllerBase
@@ -21,16 +24,22 @@ namespace JoinJoy.WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateActivity([FromBody] ActivityRequest activityRequest)
         {
-            var result = await _activityService.CreateActivityAsync(activityRequest);
-            if (!result.Success)
+            // Extract user ID from JWT token if needed
+            if (int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
             {
-                return BadRequest(result.Message);
-            }
+                activityRequest.CreatedById = userId; // Assuming `UserId` exists in `ActivityRequest`
 
-            return Ok(result.Message);
+                var result = await _activityService.CreateActivityAsync(activityRequest);
+                if (!result.Success)
+                {
+                    return BadRequest(result.Message);
+                }
+
+                return Ok(result.Message);
+            }
+            return Unauthorized("User ID is missing or invalid in token.");
         }
 
-        // POST: api/activities/create-with-coordinates
         [HttpPost("create-with-coordinates")]
         public async Task<IActionResult> CreateActivityWithCoordinates([FromBody] ActivityRequestWithCoordinates request)
         {
@@ -39,14 +48,19 @@ namespace JoinJoy.WebApi.Controllers
                 return BadRequest("Request body is null.");
             }
 
-            var result = await _activityService.CreateActivityWithCoordinatesAsync(request);
-
-            if (result.Success)
+            if (int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
             {
-                return Ok(result);
-            }
+                request.CreatedById = userId; // Assuming `UserId` exists in `ActivityRequestWithCoordinates`
 
-            return BadRequest(result);
+                var result = await _activityService.CreateActivityWithCoordinatesAsync(request);
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+
+                return BadRequest(result);
+            }
+            return Unauthorized("User ID is missing or invalid in token.");
         }
 
         [HttpPut("{activityId}")]
@@ -91,6 +105,7 @@ namespace JoinJoy.WebApi.Controllers
 
             return Ok(activity);
         }
+
         [HttpPost("{activityId}/addUsers")]
         public async Task<IActionResult> AddUsersToActivity(int activityId, [FromBody] List<int> userIds)
         {

@@ -112,14 +112,18 @@ namespace JoinJoy.WebApi
                     blobStorageService
                 );
             });
+            services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+            services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IActivityService>(provider =>
             {
+                var feedbackRepository = provider.GetRequiredService<IRepository<Feedback>>();
                 var activityRepository = provider.GetRequiredService<IRepository<Activity>>();
                 var locationRepository = provider.GetRequiredService<IRepository<Location>>();
                 var userRepository = provider.GetRequiredService<IUserRepository>();
                 var userActivityRepository = provider.GetRequiredService<IRepository<UserActivity>>();
                 var customLocationRepository = provider.GetRequiredService<ILocationRepository>();
                 return new ActivityService(
+                    feedbackRepository,
                     activityRepository,
                     locationRepository,
                     userRepository,
@@ -129,8 +133,6 @@ namespace JoinJoy.WebApi
                     geocodingApiKey
                 );
             });
-            services.AddScoped<IFeedbackRepository, FeedbackRepository>();
-            services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<ILocationService, LocationService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IAdminService, AdminService>();

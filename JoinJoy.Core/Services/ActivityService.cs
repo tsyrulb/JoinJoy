@@ -12,6 +12,7 @@ namespace JoinJoy.Infrastructure.Services
 {
     public class ActivityService : IActivityService
     {
+        private readonly IRepository<Feedback> _feedbackRepository;
         private readonly IRepository<Activity> _activityRepository;
         private readonly IRepository<Location> _locationRepository;
         private readonly IUserRepository _userRepository;
@@ -21,6 +22,7 @@ namespace JoinJoy.Infrastructure.Services
         private readonly string _geocodingApiKey;
 
         public ActivityService(
+            IRepository<Feedback> feedbackRepository,
             IRepository<Activity> activityRepository,
             IRepository<Location> locationRepository,
             IUserRepository userRepository,
@@ -30,6 +32,7 @@ namespace JoinJoy.Infrastructure.Services
             string geocodingApiKey
         )
         {
+            _feedbackRepository = feedbackRepository;
             _activityRepository = activityRepository;
             _locationRepository = locationRepository;
             _userRepository = userRepository;
@@ -212,17 +215,30 @@ namespace JoinJoy.Infrastructure.Services
 
         public async Task<ServiceResult> DeleteActivityAsync(int activityId)
         {
+            // Retrieve the activity
             var activity = await _activityRepository.GetByIdAsync(activityId);
             if (activity == null)
             {
                 return new ServiceResult { Success = false, Message = "Activity not found" };
             }
 
+            // Delete all feedbacks associated with the activity
+            var feedbacks = await _feedbackRepository.FindAsync(f => f.ActivityId == activityId);
+            foreach (var feedback in feedbacks)
+            {
+                await _feedbackRepository.RemoveAsync(feedback);
+            }
+
+            // Save changes after deleting feedbacks
+            await _feedbackRepository.SaveChangesAsync();
+
+            // Retrieve the associated location
             var locationId = activity.LocationId;
 
+            // Delete the activity
             await _activityRepository.RemoveAsync(activity);
 
-            // Check if the location is still referenced by any activity
+            // Check if the location is still referenced by any other activity
             if (!await _customLocationRepository.IsLocationReferencedAsync(locationId))
             {
                 var location = await _locationRepository.GetByIdAsync(locationId);
@@ -232,8 +248,9 @@ namespace JoinJoy.Infrastructure.Services
                 }
             }
 
-            return new ServiceResult { Success = true, Message = "Activity deleted successfully" };
+            return new ServiceResult { Success = true, Message = "Activity and associated feedback deleted successfully" };
         }
+
 
         public async Task<IEnumerable<Activity>> GetAllActivitiesAsync()
         {
