@@ -57,13 +57,20 @@ public class OpenStreetMapService
 
                 foreach (var place in elements)
                 {
-                    string name = place["tags"]?["name"]?.ToString() ?? "Unknown place";
+                    string name = place["tags"]?["name"]?.ToString();
+
+                    // Skip places without a name or with "Unknown place"
+                    if (string.IsNullOrWhiteSpace(name) || name.Equals("Unknown place", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
                     string lat = place["lat"]?.ToString();
                     string lon = place["lon"]?.ToString();
                     output += $"Name: {name}, Latitude: {lat}, Longitude: {lon}\n";
                 }
 
-                return output;
+                return string.IsNullOrWhiteSpace(output) ? "No valid places found in the response." : output;
             }
             else
             {
@@ -76,6 +83,7 @@ public class OpenStreetMapService
             return $"Error parsing the response: {ex.Message}";
         }
     }
+
 
     public async Task<SbertMatchResponse> GetSbertMatches(string userInput)
     {

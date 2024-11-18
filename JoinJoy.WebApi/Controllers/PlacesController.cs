@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize] // Require authentication for all actions in this controller
+
 public class PlacesController : ControllerBase
 {
     private readonly OpenStreetMapService _osmService;
@@ -23,17 +27,21 @@ public class PlacesController : ControllerBase
                 return BadRequest("Key and value are required.");
             }
 
+            // Optionally retrieve the user ID from the token
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return Unauthorized("User ID is missing or invalid in token.");
+            }
+
             var places = await _osmService.GetNearbyPlaces(latitude, longitude, key, value, radius);
             return Ok(places);
         }
         catch (Exception ex)
         {
             return StatusCode(500, "Internal server error: " + ex.Message);
-
         }
     }
-    
-    // POST: api/places/user-input
+
     [HttpPost("user-input")]
     public async Task<IActionResult> PostUserInput([FromBody] UserInputModel inputModel)
     {
@@ -44,6 +52,12 @@ public class PlacesController : ControllerBase
 
         try
         {
+            // Optionally retrieve the user ID from the token
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return Unauthorized("User ID is missing or invalid in token.");
+            }
+
             // Call the service to get the SBERT matches
             var matches = await _osmService.GetSbertMatches(inputModel.UserInput);
             return Ok(matches);  // Return the matches from Flask API to the client
@@ -54,7 +68,6 @@ public class PlacesController : ControllerBase
         }
     }
 
-    // POST: api/places/nearby-all
     [HttpPost("nearby-all")]
     public async Task<IActionResult> GetAllNearbyPlaces([FromBody] UserLocationRequest request)
     {
@@ -65,6 +78,12 @@ public class PlacesController : ControllerBase
 
         try
         {
+            // Optionally retrieve the user ID from the token
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return Unauthorized("User ID is missing or invalid in token.");
+            }
+
             // Call the service to find all nearby places for the given user input
             var nearbyPlaces = await _osmService.GetAllNearbyPlaces(request.Latitude, request.Longitude, request.UserInput, request.Radius);
 
@@ -85,6 +104,7 @@ public class PlacesController : ControllerBase
             return StatusCode(500, new { error = $"Internal server error: {ex.Message}" });
         }
     }
+
 }
 
 public class UserInputModel
