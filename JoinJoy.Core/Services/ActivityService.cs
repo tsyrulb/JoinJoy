@@ -159,7 +159,17 @@ namespace JoinJoy.Infrastructure.Services
 
                 await _userActivityRepository.AddAsync(userActivity);
 
-                return new ServiceResult { Success = true, Message = "Activity created successfully" };
+                // Return the activity details in the desired JSON format
+                var activityResponse = new
+                {
+                    id = activity.Id,
+                    name = activity.Name,
+                    description = activity.Description,
+                    date = activity.Date.ToString("yyyy-MM-dd"),
+                    latitude = newLocation.Latitude,
+                    longitude = newLocation.Longitude
+                };
+                return new ServiceResult { Success = true, Message = "Activity created successfully", Data = activityResponse };
             }
             catch (Exception ex)
             {

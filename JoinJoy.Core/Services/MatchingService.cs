@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using JoinJoy.Core.Interfaces;
 using JoinJoy.Core.Models;
+using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace JoinJoy.Infrastructure.Services
 {
@@ -16,6 +18,7 @@ namespace JoinJoy.Infrastructure.Services
         private readonly IRepository<UserActivity> _userActivity;
         private readonly IRepository<Subcategory> _subcategory;
         private readonly IRepository<Category> _category;
+        private readonly HttpClient _httpClient;
 
 
         public MatchingService(
@@ -25,7 +28,8 @@ namespace JoinJoy.Infrastructure.Services
             IRepository<UserSubcategory> userSubcategoryRepository,
             IRepository<UserActivity> userActivity,
             IRepository<Subcategory> subcategory,
-            IRepository<Category> category)
+            IRepository<Category> category,
+            HttpClient httpClient)
         {
             _userRepository = userRepository;
             _matchRepository = matchRepository;
@@ -34,6 +38,7 @@ namespace JoinJoy.Infrastructure.Services
             _userActivity = userActivity;
             _subcategory = subcategory;
             _category = category;
+            _httpClient = httpClient;
         }
 
         private double CalculateDistance(Location loc1, Location loc2)
@@ -108,6 +113,207 @@ namespace JoinJoy.Infrastructure.Services
             return await _category.GetAllAsync();
         }
 
+        public async Task<IEnumerable<UserRecommendation>> GetRecommendedUsersForActivityAsync(int activityId, int topN)
+        {
+            var flaskApiUrl = $"http://localhost:5000/recommend_users?activity_id={activityId}&top_n={topN}";
+
+            try
+            {
+                var response = await _httpClient.GetAsync(flaskApiUrl);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var recommendations = await response.Content.ReadFromJsonAsync<IEnumerable<UserRecommendation>>();
+                    return recommendations ?? Enumerable.Empty<UserRecommendation>();
+                }
+                else
+                {
+                    throw new Exception($"Error fetching user recommendations: {response.StatusCode} {response.ReasonPhrase}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception as needed
+                throw new Exception($"An error occurred while communicating with the Flask API: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<IEnumerable<ActivityRecommendation>> GetRecommendedActivitiesForUserAsync(int userId, int topN)
+        {
+            var flaskApiUrl = $"http://localhost:5000/recommend_activities?user_id={userId}&top_n={topN}";
+
+            try
+            {
+                var response = await _httpClient.GetAsync(flaskApiUrl);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var recommendations = await response.Content.ReadFromJsonAsync<IEnumerable<ActivityRecommendation>>();
+                    return recommendations ?? Enumerable.Empty<ActivityRecommendation>();
+                }
+                else
+                {
+                    throw new Exception($"Error fetching activity recommendations: {response.StatusCode} {response.ReasonPhrase}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception as needed
+                throw new Exception($"An error occurred while communicating with the Flask API: {ex.Message}", ex);
+            }
+        }
+        public async Task<ServiceResult> SendInvitationsAsync(int senderId, int activityId, List<int> receiverIds)
+        {
+            var activity = await _activityRepository.GetByIdAsync(activityId);
+            if (activity == null)
+            {
+                return new ServiceResult { Success = false, Message = "Activity not found" };
+            }
+            // Fetch all valid user IDs from the database
+            var validUserIds = await _userRepository.GetAllAsync();
+            var validReceiverIds = validUserIds.Select(u => u.Id).ToHashSet();
+            // Validate receiverIds
+            var invalidReceiverIds = receiverIds.Where(id => !validReceiverIds.Contains(id)).ToList();
+            if (invalidReceiverIds.Any())
+            {
+                return new ServiceResult
+                {
+                    Success = false,
+                    Message = $"Invalid user IDs: {string.Join(", ", invalidReceiverIds)}"
+                };
+            }
+            var matches = new List<Match>();
+            foreach (var receiverId in receiverIds)
+            {
+                // Check if a match already exists
+                var existingMatch = await _matchRepository.FindAsync(m =>
+                m.ActivityId == activityId && m.UserId1 == senderId && m.User2Id == receiverId);
+
+                if (!existingMatch.Any())
+                {
+                    var match = new Match
+                    {
+                        UserId1 = senderId,
+                        User2Id = receiverId, // Ensure this is the correct column
+                        ActivityId = activityId,
+                        MatchDate = DateTime.UtcNow,
+                        IsAccepted = false // Initially set to false until the user accepts the invitation
+                    };
+                    matches.Add(match);
+                }
+            }
+
+            if (matches.Any())
+            {
+                try
+                {
+                    foreach (var match in matches)
+                    {
+                        await _matchRepository.AddAsync(match);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return new ServiceResult
+                    {
+                        Success = false,
+                        Message = $"Error while saving matches: {ex.Message}"
+                    };
+                }
+            }
+
+
+            return new ServiceResult
+            {
+                Success = true,
+                Message = $"Invitations sent to {matches.Count} users."
+            };
+        }
+
+        public async Task<ServiceResult> AcceptInvitationAsync(int matchId, int userId)
+        {
+            var match = await _matchRepository.GetByIdAsync(matchId);
+            if (match == null)
+            {
+                return new ServiceResult { Success = false, Message = "Match not found" };
+            }
+
+            if (match.User2Id != userId)
+            {
+                return new ServiceResult { Success = false, Message = "User is not authorized to accept this invitation" };
+            }
+
+            match.IsAccepted = true;
+            await _matchRepository.UpdateAsync(match);
+
+            return new ServiceResult { Success = true, Message = "Invitation accepted successfully" };
+        }
+
+        public async Task<IEnumerable<Match>> GetAllMatchesAsync()
+        {
+            return await _matchRepository.GetAllAsync();
+        }
+
+        public async Task<Match> GetMatchByIdAsync(int id)
+        {
+            return await _matchRepository.GetByIdAsync(id);
+        }
+
+        public async Task<ServiceResult> CreateMatchAsync(Match match)
+        {
+            try
+            {
+                await _matchRepository.AddAsync(match);
+                return new ServiceResult { Success = true, Message = "Match created successfully." };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult { Success = false, Message = $"Error creating match: {ex.Message}" };
+            }
+        }
+
+        public async Task<ServiceResult> UpdateMatchAsync(int id, Match updatedMatch)
+        {
+            var match = await _matchRepository.GetByIdAsync(id);
+            if (match == null)
+            {
+                return new ServiceResult { Success = false, Message = "Match not found." };
+            }
+
+            match.UserId1 = updatedMatch.UserId1;
+            match.User2Id = updatedMatch.User2Id;
+            match.ActivityId = updatedMatch.ActivityId;
+            match.IsAccepted = updatedMatch.IsAccepted;
+
+            try
+            {
+                await _matchRepository.UpdateAsync(match);
+                return new ServiceResult { Success = true, Message = "Match updated successfully." };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult { Success = false, Message = $"Error updating match: {ex.Message}" };
+            }
+        }
+
+        public async Task<ServiceResult> DeleteMatchAsync(int id)
+        {
+            var match = await _matchRepository.GetByIdAsync(id);
+            if (match == null)
+            {
+                return new ServiceResult { Success = false, Message = "Match not found." };
+            }
+
+            try
+            {
+                await _matchRepository.RemoveAsync(match);
+                return new ServiceResult { Success = true, Message = "Match deleted successfully." };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult { Success = false, Message = $"Error deleting match: {ex.Message}" };
+            }
+        }
 
     }
 }

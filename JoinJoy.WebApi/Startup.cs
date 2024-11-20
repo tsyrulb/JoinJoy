@@ -137,7 +137,7 @@ namespace JoinJoy.WebApi
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();
-            
+            services.AddHttpClient<MatchingService>();
 
 
             services.AddAuthorization();

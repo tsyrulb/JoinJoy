@@ -2,11 +2,15 @@
 using JoinJoy.Core.Interfaces;
 using System.Threading.Tasks;
 using JoinJoy.Infrastructure.Services;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using JoinJoy.Core.Models;
 
 namespace JoinJoy.WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class MatchingController : ControllerBase
     {
         private readonly IMatchingService _matchingService;
@@ -78,6 +82,172 @@ namespace JoinJoy.WebApi.Controllers
                 return NotFound("No categories found with details.");
             }
             return Ok(categories);
+        }
+        [HttpGet("recommend-users")]
+        public async Task<IActionResult> GetRecommendedUsersForActivity([FromQuery] int activityId, [FromQuery] int topN = 20)
+        {
+            try
+            {
+                var recommendations = await _matchingService.GetRecommendedUsersForActivityAsync(activityId, topN);
+                return Ok(recommendations);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("recommend-activities")]
+        public async Task<IActionResult> GetRecommendedActivitiesForUser([FromQuery] int userId, [FromQuery] int topN = 20)
+        {
+            try
+            {
+                var recommendations = await _matchingService.GetRecommendedActivitiesForUserAsync(userId, topN);
+                return Ok(recommendations);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("send-invitations")]
+        public async Task<IActionResult> SendInvitations([FromBody] InvitationRequest request)
+        {
+            Console.WriteLine($"Received payload: ActivityId={request.ActivityId}, ReceiverIds={string.Join(", ", request.ReceiverIds)}");
+            if (int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int senderId))
+            {
+                var result = await _matchingService.SendInvitationsAsync(senderId, request.ActivityId, request.ReceiverIds);
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+
+                return BadRequest(result.Message);
+            }
+            return Unauthorized("User ID is missing or invalid in token.");
+        }
+
+        [HttpPost("accept-invitation/{matchId}")]
+        public async Task<IActionResult> AcceptInvitation(int matchId)
+        {
+            if (int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                var result = await _matchingService.AcceptInvitationAsync(matchId, userId);
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+
+                return BadRequest(result.Message);
+            }
+            return Unauthorized("User ID is missing or invalid in token.");
+        }
+        // GET: api/matching/matches
+        [HttpGet("matches")]
+        public async Task<IActionResult> GetAllMatches()
+        {
+            var matches = await _matchingService.GetAllMatchesAsync();
+            if (!matches.Any())
+            {
+                return NotFound("No matches found.");
+            }
+            return Ok(matches);
+        }
+
+        // GET: api/matching/matches/{id}
+        [HttpGet("matches/{id}")]
+        public async Task<IActionResult> GetMatchById(int id)
+        {
+            var match = await _matchingService.GetMatchByIdAsync(id);
+            if (match == null)
+            {
+                return NotFound($"Match with ID {id} not found.");
+            }
+            return Ok(match);
+        }
+
+        // POST: api/matching/matches
+        [HttpPost("matches")]
+        public async Task<IActionResult> CreateMatch([FromBody] Match match)
+        {
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return Unauthorized("User ID is missing or invalid in token.");
+            }
+
+            match.UserId1 = userId; // Set the first user as the currently logged-in user
+            match.MatchDate = DateTime.UtcNow;
+
+            var result = await _matchingService.CreateMatchAsync(match);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result.Message);
+        }
+
+        // PUT: api/matching/matches/{id}
+        [HttpPut("matches/{id}")]
+        public async Task<IActionResult> UpdateMatch(int id, [FromBody] Match updatedMatch)
+        {
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return Unauthorized("User ID is missing or invalid in token.");
+            }
+
+            var match = await _matchingService.GetMatchByIdAsync(id);
+            if (match == null)
+            {
+                return NotFound("Match not found.");
+            }
+
+            if (match.UserId1 != userId && match.User2Id != userId)
+            {
+                return Forbid("You are not authorized to update this match.");
+            }
+
+            updatedMatch.Id = id; // Ensure the ID matches the one being updated
+            var result = await _matchingService.UpdateMatchAsync(id, updatedMatch);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result.Message);
+        }
+
+        // DELETE: api/matching/matches/{id}
+        [HttpDelete("matches/{id}")]
+        public async Task<IActionResult> DeleteMatch(int id)
+        {
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return Unauthorized("User ID is missing or invalid in token.");
+            }
+
+            var match = await _matchingService.GetMatchByIdAsync(id);
+            if (match == null)
+            {
+                return NotFound("Match not found.");
+            }
+
+            if (match.UserId1 != userId && match.User2Id != userId)
+            {
+                return Forbid("You are not authorized to delete this match.");
+            }
+
+            var result = await _matchingService.DeleteMatchAsync(id);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result.Message);
+        }
+
+        public class InvitationRequest
+        {
+            public int ActivityId { get; set; } // ID of the activity
+            public List<int> ReceiverIds { get; set; } // List of user IDs to send invitations to
         }
 
     }

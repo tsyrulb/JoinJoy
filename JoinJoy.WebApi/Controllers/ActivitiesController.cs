@@ -55,7 +55,7 @@ namespace JoinJoy.WebApi.Controllers
                 var result = await _activityService.CreateActivityWithCoordinatesAsync(request);
                 if (result.Success)
                 {
-                    return Ok(result);
+                    return Ok(result.Data);
                 }
 
                 return BadRequest(result);

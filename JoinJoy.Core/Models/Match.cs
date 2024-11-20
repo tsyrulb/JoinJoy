@@ -10,7 +10,7 @@ namespace JoinJoy.Core.Models
     {
         public int Id { get; set; } // Unique identifier for the match
         public int UserId1 { get; set; } // ID of the first user in the match
-        public int UserId2 { get; set; } // ID of the second user in the match
+        public int User2Id { get; set; } // Corrected to match the table design
         public int ActivityId { get; set; } // ID of the activity associated with the match
         public DateTime MatchDate { get; set; } // Date when the match was made
         public bool IsAccepted { get; set; } // Status indicating if the match was accepted
