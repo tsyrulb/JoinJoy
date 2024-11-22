@@ -169,9 +169,11 @@ namespace JoinJoy.Infrastructure.Services
             {
                 return new ServiceResult { Success = false, Message = "Activity not found" };
             }
+
             // Fetch all valid user IDs from the database
             var validUserIds = await _userRepository.GetAllAsync();
             var validReceiverIds = validUserIds.Select(u => u.Id).ToHashSet();
+
             // Validate receiverIds
             var invalidReceiverIds = receiverIds.Where(id => !validReceiverIds.Contains(id)).ToList();
             if (invalidReceiverIds.Any())
@@ -182,22 +184,35 @@ namespace JoinJoy.Infrastructure.Services
                     Message = $"Invalid user IDs: {string.Join(", ", invalidReceiverIds)}"
                 };
             }
+
             var matches = new List<Match>();
             foreach (var receiverId in receiverIds)
             {
                 // Check if a match already exists
                 var existingMatch = await _matchRepository.FindAsync(m =>
-                m.ActivityId == activityId && m.UserId1 == senderId && m.User2Id == receiverId);
+                    m.ActivityId == activityId && m.UserId1 == senderId && m.User2Id == receiverId);
 
                 if (!existingMatch.Any())
                 {
+                    // Load related entities
+                    var sender = await _userRepository.GetByIdAsync(senderId);
+                    var receiver = await _userRepository.GetByIdAsync(receiverId);
+
+                    if (sender == null || receiver == null)
+                    {
+                        continue; // Skip if users are not found
+                    }
+
                     var match = new Match
                     {
                         UserId1 = senderId,
-                        User2Id = receiverId, // Ensure this is the correct column
+                        User2Id = receiverId,
                         ActivityId = activityId,
                         MatchDate = DateTime.UtcNow,
-                        IsAccepted = false // Initially set to false until the user accepts the invitation
+                        IsAccepted = false, // Initially set to false until the user accepts the invitation
+                        User1 = sender,
+                        User2 = receiver,
+                        Activity = activity // Assign the activity object
                     };
                     matches.Add(match);
                 }
@@ -205,23 +220,11 @@ namespace JoinJoy.Infrastructure.Services
 
             if (matches.Any())
             {
-                try
+                foreach (var match in matches)
                 {
-                    foreach (var match in matches)
-                    {
-                        await _matchRepository.AddAsync(match);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return new ServiceResult
-                    {
-                        Success = false,
-                        Message = $"Error while saving matches: {ex.Message}"
-                    };
+                    await _matchRepository.AddAsync(match);
                 }
             }
-
 
             return new ServiceResult
             {
@@ -243,16 +246,50 @@ namespace JoinJoy.Infrastructure.Services
                 return new ServiceResult { Success = false, Message = "User is not authorized to accept this invitation" };
             }
 
+            // Update the match to mark it as accepted
             match.IsAccepted = true;
             await _matchRepository.UpdateAsync(match);
 
-            return new ServiceResult { Success = true, Message = "Invitation accepted successfully" };
+            // Check if the user is already part of the activity in UserActivities
+            var existingUserActivity = await _userActivity.FindAsync(ua =>
+                ua.UserId == userId && ua.ActivityId == match.ActivityId);
+
+            if (!existingUserActivity.Any())
+            {
+                // Add the user to the activity in UserActivities
+                var userActivity = new UserActivity
+                {
+                    UserId = userId,
+                    ActivityId = match.ActivityId
+                };
+
+                await _userActivity.AddAsync(userActivity);
+            }
+
+            return new ServiceResult { Success = true, Message = "Invitation accepted and user added to the activity successfully" };
         }
+
 
         public async Task<IEnumerable<Match>> GetAllMatchesAsync()
         {
             return await _matchRepository.GetAllAsync();
         }
+        public async Task<IEnumerable<Match>> GetMatchesByUserIdAsync(int userId)
+        {
+            var matches = await _matchRepository.FindAsync(m => m.UserId1 == userId || m.User2Id == userId);
+
+            foreach (var match in matches)
+            {
+                // Explicitly load related entities if not already loaded
+                match.User1 = await _userRepository.GetByIdAsync(match.UserId1);
+                match.User2 = await _userRepository.GetByIdAsync(match.User2Id);
+                match.Activity = await _activityRepository.GetByIdAsync(match.ActivityId);
+            }
+
+            return matches;
+        }
+
+
 
         public async Task<Match> GetMatchByIdAsync(int id)
         {

@@ -8,7 +8,7 @@ namespace JoinJoy.Infrastructure.Services
         Task<IEnumerable<UserActivity>> GetAllUserActivitiesAsync();
         Task<IEnumerable<Activity>> GetAllActivitiesAsync();
         Task<IEnumerable<Category>> GetAllCategoryAsync();
-
+        Task<IEnumerable<Match>> GetMatchesByUserIdAsync(int userId);
         Task<User> GetUserWithDetailsAsync(int userId);
         Task<IEnumerable<Subcategory>> GetAllSubcategoryAsync();
         Task<IEnumerable<UserSubcategory>> GetAllUserSubcategoryAsync();

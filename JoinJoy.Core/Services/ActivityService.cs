@@ -261,6 +261,51 @@ namespace JoinJoy.Infrastructure.Services
             return new ServiceResult { Success = true, Message = "Activity and associated feedback deleted successfully" };
         }
 
+        public async Task<ServiceResult> AddUserToActivityAsync(int activityId, int userId)
+        {
+            var activity = await _activityRepository.GetByIdAsync(activityId);
+            if (activity == null)
+            {
+                return new ServiceResult { Success = false, Message = "Activity not found" };
+            }
+
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return new ServiceResult { Success = false, Message = "User not found" };
+            }
+
+            // Check if the user is already in the activity
+            var existingUserActivity = await _userActivityRepository.FindAsync(ua => ua.ActivityId == activityId && ua.UserId == userId);
+            if (existingUserActivity.Any())
+            {
+                return new ServiceResult { Success = false, Message = "User is already part of the activity" };
+            }
+
+            var userActivity = new UserActivity
+            {
+                UserId = userId,
+                ActivityId = activityId
+            };
+
+            await _userActivityRepository.AddAsync(userActivity);
+
+            return new ServiceResult { Success = true, Message = "User added to the activity successfully" };
+        }
+
+        public async Task<ServiceResult> RemoveUserFromActivityAsync(int activityId, int userId)
+        {
+            var userActivity = await _userActivityRepository.FindAsync(ua => ua.ActivityId == activityId && ua.UserId == userId);
+            var userActivityEntity = userActivity.FirstOrDefault();
+            if (userActivityEntity == null)
+            {
+                return new ServiceResult { Success = false, Message = "User is not part of the activity" };
+            }
+
+            await _userActivityRepository.RemoveAsync(userActivityEntity);
+
+            return new ServiceResult { Success = true, Message = "User removed from the activity successfully" };
+        }
 
         public async Task<IEnumerable<Activity>> GetAllActivitiesAsync()
         {
@@ -338,8 +383,68 @@ namespace JoinJoy.Infrastructure.Services
             }
         }
 
+        public async Task<IEnumerable<ActivityWithParticipants>> GetUserActivitiesWithParticipantsAsync(int userId)
+        {
+            // Fetch all user activities for the given user
+            var userActivities = await _userActivityRepository.FindAsync(ua => ua.UserId == userId);
+            var activityIds = userActivities.Select(ua => ua.ActivityId).Distinct().ToList();
+
+            if (!activityIds.Any())
+            {
+                return Enumerable.Empty<ActivityWithParticipants>();
+            }
+
+            var result = new List<ActivityWithParticipants>();
+
+            foreach (var activityId in activityIds)
+            {
+                // Fetch activity details using ActivityId
+                var activity = await _activityRepository.GetByIdAsync(activityId);
+                if (activity == null)
+                {
+                    continue; // Skip if activity is missing
+                }
+
+                // Fetch all participants for this activity
+                var participants = await _userActivityRepository.FindAsync(ua => ua.ActivityId == activityId);
+                var participantInfoList = new List<ParticipantInfo>();
+
+                foreach (var participant in participants)
+                {
+                    // Fetch user details for each participant
+                    var user = await _userRepository.GetByIdAsync(participant.UserId);
+                    if (user != null)
+                    {
+                        participantInfoList.Add(new ParticipantInfo
+                        {
+                            UserId = user.Id,
+                            UserName = user.Name,
+                            PictureUrl = user.ProfilePhoto
+                        });
+                    }
+                }
+
+                // Add activity details with participants to the result
+                result.Add(new ActivityWithParticipants
+                {
+                    ActivityId = activity.Id,
+                    Name = activity.Name,
+                    Description = activity.Description,
+                    Date = activity.Date,
+                    Location = activity.Location?.Address ?? "Unknown location",
+                    CreatedById = activity.CreatedById,
+                    Participants = participantInfoList
+                });
+            }
+
+            return result;
+        }
+
+
+
     }
 }
+
 public class ActivityRequestWithCoordinates
 {
     public string Name { get; set; } // Activity name

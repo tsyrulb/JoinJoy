@@ -116,5 +116,44 @@ namespace JoinJoy.WebApi.Controllers
             }
             return Ok(result.Message);
         }
+
+        [HttpPost("{activityId}/addUser")]
+        public async Task<IActionResult> AddUserToActivity(int activityId, [FromBody] int userId)
+        {
+            var result = await _activityService.AddUserToActivityAsync(activityId, userId);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
+
+        [HttpDelete("{activityId}/removeUser")]
+        public async Task<IActionResult> RemoveUserFromActivity(int activityId, [FromBody] int userId)
+        {
+            var result = await _activityService.RemoveUserFromActivityAsync(activityId, userId);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(new { success = true, message = "User removed successfully." });
+        }
+
+        [HttpGet("user-activities")]
+        public async Task<IActionResult> GetUserActivitiesWithParticipants()
+        {
+            if (int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                var result = await _activityService.GetUserActivitiesWithParticipantsAsync(userId);
+                if (result == null || !result.Any())
+                {
+                    return NotFound("No activities found for the user.");
+                }
+                return Ok(result);
+            }
+            return Unauthorized("User ID is missing or invalid in token.");
+        }
+
+
     }
 }

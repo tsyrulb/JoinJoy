@@ -155,6 +155,29 @@ namespace JoinJoy.WebApi.Controllers
             return Ok(matches);
         }
 
+        [HttpGet("user-matches")]
+        public async Task<IActionResult> GetMatchesByUserId()
+        {
+            try
+            {
+                // Extract user ID from the token
+                if (int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int userId))
+                {
+                    var matches = await _matchingService.GetMatchesByUserIdAsync(userId);
+                    if (matches == null || !matches.Any())
+                    {
+                        return NotFound($"No matches found for user with ID {userId}.");
+                    }
+                    return Ok(matches);
+                }
+                return Unauthorized("User ID is missing or invalid in the token.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while retrieving matches: {ex.Message}");
+            }
+        }
+
         // GET: api/matching/matches/{id}
         [HttpGet("matches/{id}")]
         public async Task<IActionResult> GetMatchById(int id)
