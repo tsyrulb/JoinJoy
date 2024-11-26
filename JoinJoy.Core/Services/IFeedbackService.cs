@@ -11,5 +11,6 @@ namespace JoinJoy.Core.Services
         Task<IEnumerable<Feedback>> GetFeedbackForActivityAsync(int activityId);
         Task<ServiceResult> DeleteFeedbackAsync(int id);
         Task<ServiceResult> UpdateFeedbackAsync(int id, FeedbackRequest feedbackRequest);
+        Task<Feedback> GetFeedbackAsync(int id);
     }
 }

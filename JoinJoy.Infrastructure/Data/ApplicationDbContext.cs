@@ -17,6 +17,7 @@ namespace JoinJoy.Infrastructure.Data
         public DbSet<Message> Messages { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<UserConversation> UserConversations { get; set; }
+        public DbSet<UserUnavailability> UserUnavailabilities { get; set; }
 
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<Location> Locations { get; set; }
@@ -86,6 +87,15 @@ namespace JoinJoy.Infrastructure.Data
                 .HasOne(m => m.Conversation)
                 .WithMany(c => c.Messages)
                 .HasForeignKey(m => m.ConversationId);
+
+            modelBuilder.Entity<UserUnavailability>()
+                .HasKey(uu => uu.Id); // Assuming `Id` is the primary key
+            modelBuilder.Entity<UserUnavailability>()
+                .HasOne(uu => uu.User)
+                .WithMany(u => u.UserUnavailabilities)
+                .HasForeignKey(uu => uu.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

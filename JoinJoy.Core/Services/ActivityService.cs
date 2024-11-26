@@ -242,6 +242,16 @@ namespace JoinJoy.Infrastructure.Services
             // Save changes after deleting feedbacks
             await _feedbackRepository.SaveChangesAsync();
 
+            // Delete all user activities associated with the activity
+            var userActivities = await _userActivityRepository.FindAsync(ua => ua.ActivityId == activityId);
+            foreach (var userActivity in userActivities)
+            {
+                await _userActivityRepository.RemoveAsync(userActivity);
+            }
+
+            // Save changes after deleting user activities
+            await _userActivityRepository.SaveChangesAsync();
+
             // Retrieve the associated location
             var locationId = activity.LocationId;
 
@@ -258,8 +268,9 @@ namespace JoinJoy.Infrastructure.Services
                 }
             }
 
-            return new ServiceResult { Success = true, Message = "Activity and associated feedback deleted successfully" };
+            return new ServiceResult { Success = true, Message = "Activity, associated feedback, and user activities deleted successfully" };
         }
+
 
         public async Task<ServiceResult> AddUserToActivityAsync(int activityId, int userId)
         {

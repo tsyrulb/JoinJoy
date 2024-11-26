@@ -314,32 +314,6 @@ namespace JoinJoy.Infrastructure.Services
             return new ServiceResult { Success = true, Message = "User deleted successfully" };
         }
 
-        public async Task<bool> IsUserAvailableAsync(int userId, DateTime currentTime)
-        {
-            var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null)
-            {
-                throw new Exception("User not found");
-            }
-
-            // Check user unavailability
-            if (user.UnavailableDay.HasValue && user.UnavailableStartTime.HasValue && user.UnavailableEndTime.HasValue)
-            {
-                if (user.UnavailableDay.Value.Equals(currentTime.DayOfWeek))
-                {
-                    var start = user.UnavailableStartTime.Value;
-                    var end = user.UnavailableEndTime.Value;
-                    var current = currentTime.TimeOfDay;
-
-                    if (current >= start && current <= end)
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
         public async Task<ServiceResult> AddUserSubcategoriesAsync(int userId, List<UserSubcategoryDto> subcategoryIds)
         {
             var user = await _userRepository.GetByIdAsync(userId);
@@ -412,26 +386,9 @@ namespace JoinJoy.Infrastructure.Services
 
             return new ServiceResult { Success = true, Message = "Distance willing to travel updated successfully" };
         }
-        public async Task<ServiceResult> SetUserAvailabilityAsync(int userId, DayOfWeek unavailableDay, TimeSpan unavailableStartTime, TimeSpan unavailableEndTime)
-        {
-            var user = await _userRepository.GetByIdAsync(userId);
+        
 
-            if (user == null)
-            {
-                return new ServiceResult { Success = false, Message = "User not found" };
-            }
 
-            // Update the user's availability
-            user.UnavailableDay = unavailableDay;
-            user.UnavailableStartTime = unavailableStartTime;
-            user.UnavailableEndTime = unavailableEndTime;
-
-            // Save changes to the database
-            await _userRepository.UpdateAsync(user);
-            await _userRepository.SaveChangesAsync();
-
-            return new ServiceResult { Success = true, Message = "User availability updated successfully" };
-        }
 
 
         public async Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId)

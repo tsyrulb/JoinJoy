@@ -93,6 +93,8 @@ namespace JoinJoy.WebApi
             services.AddScoped<OpenStreetMapService>();
             services.AddHttpClient<OpenStreetMapService>();
             services.AddScoped<IMessageRepository, MessageRepository>();  // Add this line
+            services.AddScoped<IUserUnavailabilityService, UserUnavailabilityService>();
+            services.AddScoped<IRepository<UserUnavailability>, Repository<UserUnavailability>>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IRepository<Conversation>, Repository<Conversation>>();
             services.AddScoped<IRepository<Message>, Repository<Message>>();

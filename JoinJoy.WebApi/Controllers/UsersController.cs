@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using JoinJoy.Core.Models;
 using JoinJoy.Core.Services;
@@ -191,17 +192,12 @@ namespace JoinJoy.WebApi.Controllers
             }
             return Ok(result);
         }
-        
-        [HttpPost("set-availability")]
-        public async Task<IActionResult> SetAvailability(int userId, DayOfWeek unavailableDay, TimeSpan unavailableStartTime, TimeSpan unavailableEndTime)
-        {
-            var result = await _userService.SetUserAvailabilityAsync(userId, unavailableDay, unavailableStartTime, unavailableEndTime);
 
-            if (result.Success)
-            {
-                return Ok(result.Message);
-            }
-            return BadRequest(result.Message);
+        public class AvailabilityRequest
+        {
+            public int Day { get; set; } // Represents DayOfWeek (int)
+            public string StartTime { get; set; } // Represents start time as string
+            public string EndTime { get; set; } // Represents end time as string
         }
 
         [HttpPut("{userId}/distance")]
@@ -217,22 +213,6 @@ namespace JoinJoy.WebApi.Controllers
             return Ok(result.Message);
         }
         
-        [HttpGet("{userId}/availability")]
-        public async Task<IActionResult> CheckUserAvailability(int userId)
-        {
-            var currentTime = DateTime.UtcNow;
-
-            var isAvailable = await _userService.IsUserAvailableAsync(userId, currentTime);
-            if (isAvailable)
-            {
-                return Ok(new { available = true, message = "User is available" });
-            }
-            else
-            {
-                return Ok(new { available = false, message = "User is not available" });
-            }
-        }
-
         [HttpGet("{userId}/location")]
         public async Task<IActionResult> GetUserLocation(int userId)
         {

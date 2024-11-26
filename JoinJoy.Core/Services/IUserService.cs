@@ -21,8 +21,6 @@ namespace JoinJoy.Core.Services
         Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address, string? gender);
         Task<ServiceResult> UpdateUserDistanceWillingToTravelAsync(int userId, double distance);
         Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId);
-        Task<bool> IsUserAvailableAsync(int userId, DateTime currentTime);
-        Task<ServiceResult> SetUserAvailabilityAsync(int userId, Models.DayOfWeek unavailableDay, TimeSpan unavailableStartTime, TimeSpan unavailableEndTime);
         Task<Location?> GetUserLocationAsync(int userId);
         Task<ServiceResult> DeleteUserProfilePhotoAsync(int userId);
         Task<ServiceResult<string>> UploadUserProfilePhotoAsync(int userId, Stream photoStream, string fileName);

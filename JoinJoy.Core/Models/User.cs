@@ -16,9 +16,7 @@ namespace JoinJoy.Core.Models
         [ForeignKey("LocationId")]
         public Location? Location { get; set; }
         public string? Gender { get; set; } // Male or Female, or consider enum for better typing
-        public DayOfWeek? UnavailableDay { get; set; } // Nullable in case user has no unavailability
-        public TimeSpan? UnavailableStartTime { get; set; } // Start of unavailability
-        public TimeSpan? UnavailableEndTime { get; set; } // End of unavailability
+        public ICollection<UserUnavailability>? UserUnavailabilities { get; set; } // Add this line
         public ICollection<UserSubcategory>? UserSubcategories { get; set; } // Many-to-many relationship with subcategories
         public double? DistanceWillingToTravel { get; set; }
 

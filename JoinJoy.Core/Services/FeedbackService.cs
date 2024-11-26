@@ -30,7 +30,19 @@ namespace JoinJoy.Infrastructure.Services
 
             if (existingFeedback.Any())
             {
-                return new ServiceResult { Success = false, Message = "You have already submitted feedback for this user in this activity." };
+                var feedbackToUpdate = existingFeedback.First();
+
+                // Update the existing feedback if there are changes
+                if (feedbackToUpdate.Rating != feedback.Rating || feedbackToUpdate.Timestamp != feedback.Timestamp)
+                {
+                    feedbackToUpdate.Rating = feedback.Rating;
+                    feedbackToUpdate.Timestamp = DateTime.UtcNow;
+
+                    await _feedbackRepository.UpdateAsync(feedbackToUpdate);
+                    return new ServiceResult { Success = true, Message = "Feedback updated successfully." };
+                }
+
+                return new ServiceResult { Success = true, Message = "No changes detected; feedback remains the same." };
             }
 
             // Ensure that both users participated in the activity
@@ -40,7 +52,7 @@ namespace JoinJoy.Infrastructure.Services
                 return new ServiceResult { Success = false, Message = "Both users must have participated in the same activity." };
             }
 
-            // Proceed to submit feedback if all rules pass
+            // Proceed to add new feedback
             feedback.Timestamp = DateTime.UtcNow;
             await _feedbackRepository.AddAsync(feedback);
 
@@ -78,6 +90,11 @@ namespace JoinJoy.Infrastructure.Services
             await _feedbackRepository.UpdateAsync(feedback);
 
             return new ServiceResult { Success = true, Message = "Feedback updated successfully." };
+        }
+
+        public async Task<Feedback> GetFeedbackAsync(int id)
+        {
+            return await _feedbackRepository.GetByIdAsync(id);
         }
 
         public async Task<ServiceResult> DeleteFeedbackAsync(int id)
