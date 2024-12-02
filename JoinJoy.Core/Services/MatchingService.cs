@@ -11,6 +11,7 @@ namespace JoinJoy.Infrastructure.Services
 {
     public class MatchingService : IMatchingService
     {
+        private readonly IRepository<Location> _locationRepository;
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<Match> _matchRepository;
         private readonly IRepository<Activity> _activityRepository;
@@ -22,6 +23,7 @@ namespace JoinJoy.Infrastructure.Services
 
 
         public MatchingService(
+            IRepository<Location> locationRepository,
             IRepository<User> userRepository,
             IRepository<Match> matchRepository,
             IRepository<Activity> activityRepository,
@@ -31,6 +33,7 @@ namespace JoinJoy.Infrastructure.Services
             IRepository<Category> category,
             HttpClient httpClient)
         {
+            _locationRepository = locationRepository;
             _userRepository = userRepository;
             _matchRepository = matchRepository;
             _activityRepository = activityRepository;
@@ -138,7 +141,7 @@ namespace JoinJoy.Infrastructure.Services
             }
         }
 
-        public async Task<IEnumerable<ActivityRecommendation>> GetRecommendedActivitiesForUserAsync(int userId, int topN)
+        public async Task<IEnumerable<Activity>> GetRecommendedActivitiesForUserAsync(int userId, int topN)
         {
             var flaskApiUrl = $"http://localhost:5000/recommend_activities?user_id={userId}&top_n={topN}";
 
@@ -149,7 +152,34 @@ namespace JoinJoy.Infrastructure.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var recommendations = await response.Content.ReadFromJsonAsync<IEnumerable<ActivityRecommendation>>();
-                    return recommendations ?? Enumerable.Empty<ActivityRecommendation>();
+
+                    if (recommendations == null || !recommendations.Any())
+                    {
+                        return Enumerable.Empty<Activity>();
+                    }
+
+                    // Extract activity IDs from the recommendations
+                    var activityIds = recommendations.Select(r => r.ActivityId).ToList();
+
+                    // Fetch the Activity objects from the database
+                    var activities = await _activityRepository.FindAsync(a => activityIds.Contains(a.Id));
+                    if (!activities.Any())
+                    {
+                        return Enumerable.Empty<Activity>();
+                    }
+
+                    // Extract location IDs from the activities
+                    var locationIds = activities.Select(a => a.LocationId).Distinct().ToList();
+
+                    // Fetch the Location objects from the database
+                    var locations = await _locationRepository.FindAsync(l => locationIds.Contains(l.Id));
+
+                    // Assign locations to their respective activities
+                    foreach (var activity in activities)
+                    {
+                        activity.Location = locations.FirstOrDefault(l => l.Id == activity.LocationId);
+                    }
+                    return activities;
                 }
                 else
                 {
@@ -162,6 +192,46 @@ namespace JoinJoy.Infrastructure.Services
                 throw new Exception($"An error occurred while communicating with the Flask API: {ex.Message}", ex);
             }
         }
+
+        public async Task<ServiceResult> RequestApprovalAsync(int requesterId, int activityId)
+        {
+            // Retrieve the activity
+            var activity = await _activityRepository.GetByIdAsync(activityId);
+            if (activity == null)
+            {
+                return new ServiceResult { Success = false, Message = "Activity not found" };
+            }
+
+            // Check if the requester is already a participant
+            var existingParticipant = await _userActivity.FindAsync(ua => ua.UserId == requesterId && ua.ActivityId == activityId);
+            if (existingParticipant.Any())
+            {
+                return new ServiceResult { Success = false, Message = "You are already a participant in this activity." };
+            }
+
+            // Create a match as a request (awaiting approval)
+            var existingMatch = await _matchRepository.FindAsync(m =>
+                m.UserId1 == requesterId && m.ActivityId == activityId && m.User2Id == activity.CreatedById && !m.IsAccepted);
+
+            if (existingMatch.Any())
+            {
+                return new ServiceResult { Success = false, Message = "Approval request already sent." };
+            }
+
+            var matchRequest = new Match
+            {
+                UserId1 = requesterId,
+                User2Id = activity.CreatedById, // Request is sent to the activity creator
+                ActivityId = activityId,
+                MatchDate = DateTime.UtcNow,
+                IsAccepted = false // Awaiting approval
+            };
+
+            await _matchRepository.AddAsync(matchRequest);
+
+            return new ServiceResult { Success = true, Message = "Approval request sent successfully." };
+        }
+
         public async Task<ServiceResult> SendInvitationsAsync(int senderId, int activityId, List<int> receiverIds)
         {
             var activity = await _activityRepository.GetByIdAsync(activityId);
@@ -268,34 +338,107 @@ namespace JoinJoy.Infrastructure.Services
 
             return new ServiceResult { Success = true, Message = "Invitation accepted and user added to the activity successfully" };
         }
-
-
         public async Task<IEnumerable<Match>> GetAllMatchesAsync()
         {
             return await _matchRepository.GetAllAsync();
         }
-        public async Task<IEnumerable<Match>> GetMatchesByUserIdAsync(int userId)
+        public async Task<IEnumerable<object>> GetMatchesByUserIdAsync(int userId)
         {
+            // Fetch matches involving the user
             var matches = await _matchRepository.FindAsync(m => m.UserId1 == userId || m.User2Id == userId);
+
+            var result = new List<object>();
 
             foreach (var match in matches)
             {
-                // Explicitly load related entities if not already loaded
-                match.User1 = await _userRepository.GetByIdAsync(match.UserId1);
-                match.User2 = await _userRepository.GetByIdAsync(match.User2Id);
-                match.Activity = await _activityRepository.GetByIdAsync(match.ActivityId);
+                // Fetch users and activity details
+                var user1 = await _userRepository.GetByIdAsync(match.UserId1);
+                var user2 = await _userRepository.GetByIdAsync(match.User2Id);
+                var activity = await _activityRepository.GetByIdAsync(match.ActivityId);
+
+                if (activity != null)
+                {
+                    var location = await _locationRepository.GetByIdAsync(activity.LocationId);
+
+                    // Construct the output object
+                    result.Add(new
+                    {
+                        match.Id,
+                        match.UserId1,
+                        match.User2Id,
+                        Activity = new
+                        {
+                            activity.Id,
+                            activity.Name,
+                            activity.Description,
+                            activity.Date,
+                            Location = location == null ? null : new
+                            {
+                                location.Latitude,
+                                location.Longitude,
+                                location.Address
+                            }
+                        },
+                        User1 = user1 == null ? null : new
+                        {
+                            user1.Id,
+                            user1.Name,
+                            user1.ProfilePhoto,
+                            Contact = user1.Email
+                        },
+                        User2 = user2 == null ? null : new
+                        {
+                            user2.Id,
+                            user2.Name,
+                            user2.ProfilePhoto,
+                            Contact = user2.Email
+                        },
+                        IsAccepted = match.IsAccepted,
+                        SentDate = match.MatchDate,
+                        Status = match.IsAccepted ? "Accepted" : "Pending"
+                    });
+                }
             }
 
-            return matches;
+            return result;
         }
+        public async Task<ServiceResult> CancelInvitationAsync(int matchId, int userId)
+        {
+            // Retrieve the match
+            var match = await _matchRepository.GetByIdAsync(matchId);
+            if (match == null)
+            {
+                return new ServiceResult { Success = false, Message = "Match not found." };
+            }
 
+            // Check if the user is authorized to cancel the invitation
+            if (match.UserId1 != userId && match.User2Id != userId)
+            {
+                return new ServiceResult { Success = false, Message = "You are not authorized to cancel this invitation." };
+            }
 
+            // Ensure that the invitation is not already accepted
+            if (match.IsAccepted)
+            {
+                return new ServiceResult { Success = false, Message = "Cannot cancel an already accepted invitation." };
+            }
+
+            // Remove the match
+            try
+            {
+                await _matchRepository.RemoveAsync(match);
+                return new ServiceResult { Success = true, Message = "Invitation canceled successfully." };
+            }
+            catch (Exception ex)
+            {
+                return new ServiceResult { Success = false, Message = $"Error canceling invitation: {ex.Message}" };
+            }
+        }
 
         public async Task<Match> GetMatchByIdAsync(int id)
         {
             return await _matchRepository.GetByIdAsync(id);
         }
-
         public async Task<ServiceResult> CreateMatchAsync(Match match)
         {
             try
@@ -308,7 +451,6 @@ namespace JoinJoy.Infrastructure.Services
                 return new ServiceResult { Success = false, Message = $"Error creating match: {ex.Message}" };
             }
         }
-
         public async Task<ServiceResult> UpdateMatchAsync(int id, Match updatedMatch)
         {
             var match = await _matchRepository.GetByIdAsync(id);
@@ -332,7 +474,6 @@ namespace JoinJoy.Infrastructure.Services
                 return new ServiceResult { Success = false, Message = $"Error updating match: {ex.Message}" };
             }
         }
-
         public async Task<ServiceResult> DeleteMatchAsync(int id)
         {
             var match = await _matchRepository.GetByIdAsync(id);

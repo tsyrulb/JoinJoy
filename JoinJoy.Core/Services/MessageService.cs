@@ -26,41 +26,52 @@ public class MessageService : IMessageService
     {
         try
         {
-            if (string.IsNullOrEmpty(message.Content) || message.SenderId == 0 || message.ReceiverId == 0)
+            if (string.IsNullOrEmpty(message.Content) || message.SenderId == 0)
             {
                 return new ServiceResult { Success = false, Message = "Invalid message input." };
             }
 
-            // Check if a conversation between the sender and receiver already exists
-            var existingConversation = await _conversationRepository.FindExistingConversationAsync(message.SenderId, message.ReceiverId);
-
-            if (existingConversation != null)
+            // Ensure there is at least one receiver
+            if (message.ConversationId == 0 && message.ReceiverId == 0)
             {
-                // Continue with the existing conversation
-                message.ConversationId = existingConversation.Id;
+                return new ServiceResult { Success = false, Message = "Message must have a receiver or belong to a conversation." };
+            }
+
+            Conversation existingConversation;
+
+            if (message.ConversationId > 0)
+            {
+                // If a conversation ID is provided, find the conversation
+                existingConversation = await _conversationRepository.GetConversationWithMessagesAsync(message.ConversationId);
             }
             else
             {
-                // Create a new conversation if one doesn't exist
-                var newConversation = new Conversation
+                // Find an existing conversation between the sender and receiver
+                existingConversation = await _conversationRepository.FindExistingConversationAsync(message.SenderId, message.ReceiverId);
+
+                if (existingConversation == null)
                 {
-                    Title = $"Conversation between {message.SenderId} and {message.ReceiverId}",
-                    Participants = new List<UserConversation>
-                {
-                    new UserConversation { UserId = message.SenderId },
-                    new UserConversation { UserId = message.ReceiverId }
+                    // Create a new conversation if one doesn't exist
+                    existingConversation = new Conversation
+                    {
+                        Title = $"Conversation between {message.SenderId} and {message.ReceiverId}",
+                        Participants = new List<UserConversation>
+                    {
+                        new UserConversation { UserId = message.SenderId },
+                        new UserConversation { UserId = message.ReceiverId }
+                    }
+                    };
+
+                    // Save the new conversation
+                    await _conversationRepository.AddAsync(existingConversation);
+                    await _conversationRepository.SaveChangesAsync();
                 }
-                };
-
-                // Save the new conversation to the database
-                await _conversationRepository.AddAsync(newConversation);
-                await _conversationRepository.SaveChangesAsync();
-
-                // Assign the new conversation ID to the message
-                message.ConversationId = newConversation.Id;
             }
 
-            // Set the other message properties
+            // Associate the message with the conversation
+            message.ConversationId = existingConversation.Id;
+
+            // Set additional message properties
             message.Timestamp = DateTime.UtcNow;
             message.IsRead = false;
 
@@ -79,6 +90,7 @@ public class MessageService : IMessageService
             return new ServiceResult { Success = false, Message = "An error occurred while sending the message." };
         }
     }
+
 
 
     public async Task<ServiceResult> AddUsersToConversationAsync(int conversationId, List<int> userIds)

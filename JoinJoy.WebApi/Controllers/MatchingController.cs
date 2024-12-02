@@ -111,6 +111,23 @@ namespace JoinJoy.WebApi.Controllers
             }
         }
 
+        [HttpPost("request-approval")]
+        public async Task<IActionResult> RequestApproval([FromBody] RequestApprovalRequest request)
+        {
+            Console.WriteLine($"Received payload: ActivityId={request.ActivityId}");
+            if (int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int requesterId))
+            {
+                var result = await _matchingService.RequestApprovalAsync(requesterId, request.ActivityId);
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+
+                return BadRequest(result.Message);
+            }
+            return Unauthorized("User ID is missing or invalid in token.");
+        }
+
         [HttpPost("send-invitations")]
         public async Task<IActionResult> SendInvitations([FromBody] InvitationRequest request)
         {
@@ -143,6 +160,24 @@ namespace JoinJoy.WebApi.Controllers
             }
             return Unauthorized("User ID is missing or invalid in token.");
         }
+
+        [HttpDelete("cancel-invitation/{matchId}")]
+        public async Task<IActionResult> CancelInvitation(int matchId)
+        {
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            {
+                return Unauthorized("User ID is missing or invalid in token.");
+            }
+
+            var result = await _matchingService.CancelInvitationAsync(matchId, userId);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result.Message);
+        }
+
         // GET: api/matching/matches
         [HttpGet("matches")]
         public async Task<IActionResult> GetAllMatches()
@@ -271,6 +306,10 @@ namespace JoinJoy.WebApi.Controllers
         {
             public int ActivityId { get; set; } // ID of the activity
             public List<int> ReceiverIds { get; set; } // List of user IDs to send invitations to
+        }
+        public class RequestApprovalRequest
+        {
+            public int ActivityId { get; set; }
         }
 
     }

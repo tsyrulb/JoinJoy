@@ -23,34 +23,49 @@ namespace JoinJoy.WebApi.Controllers
         [HttpPost("send")]
         public async Task<IActionResult> SendMessage([FromBody] MessageRequest messageRequest)
         {
-            if (int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
             {
-                messageRequest.SenderId = userId;
-
-                // Send a message to each receiver
-                foreach (var receiverId in messageRequest.ReceiverIds)
-                {
-                    var message = new Message
-                    {
-                        SenderId = messageRequest.SenderId,
-                        ReceiverId = receiverId,
-                        ConversationId = messageRequest.ConversationId,
-                        Content = messageRequest.Content,
-                        Timestamp = DateTime.UtcNow,
-                        IsRead = false
-                    };
-
-                    var result = await _messageService.SendMessageAsync(message);
-                    if (!result.Success)
-                    {
-                        return BadRequest(result);
-                    }
-                }
-
-                return Ok(new { Success = true, Message = "Messages sent successfully" });
+                return Unauthorized("User ID is missing or invalid in token.");
             }
-            return Unauthorized("User ID is missing or invalid in token.");
+
+            if (messageRequest.ReceiverIds == null || !messageRequest.ReceiverIds.Any())
+            {
+                return BadRequest("Receiver ID is required.");
+            }
+
+            if (string.IsNullOrEmpty(messageRequest.Content))
+            {
+                return BadRequest("Message content is required.");
+            }
+
+            // Use only the first receiver from the list
+            int receiverId = messageRequest.ReceiverIds.First();
+
+            // Set the sender ID from the token
+            messageRequest.SenderId = userId;
+
+            // Create the message object
+            var message = new Message
+            {
+                SenderId = messageRequest.SenderId,
+                ReceiverId = receiverId,
+                ConversationId = messageRequest.ConversationId,
+                Content = messageRequest.Content,
+                Timestamp = DateTime.UtcNow,
+                IsRead = false
+            };
+
+            // Send the message
+            var result = await _messageService.SendMessageAsync(message);
+
+            if (result.Success)
+            {
+                return Ok(new { Success = true, Message = "Message sent successfully" });
+            }
+
+            return BadRequest(result);
         }
+
 
 
         // GET: api/messages/conversation/{conversationId}
