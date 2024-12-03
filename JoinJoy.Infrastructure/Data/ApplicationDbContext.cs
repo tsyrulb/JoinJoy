@@ -95,7 +95,12 @@ namespace JoinJoy.Infrastructure.Data
                 .WithMany(u => u.UserUnavailabilities)
                 .HasForeignKey(uu => uu.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-
+            // Define the relationship between Activity and Conversation
+            modelBuilder.Entity<Activity>()
+                .HasOne(a => a.Conversation)
+                .WithMany()
+                .HasForeignKey(a => a.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

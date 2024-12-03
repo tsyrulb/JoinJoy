@@ -11,6 +11,8 @@ namespace JoinJoy.Infrastructure.Services
 {
     public class MatchingService : IMatchingService
     {
+        private readonly IRepository<Conversation> _conversationRepository;
+        private readonly IRepository<UserConversation> _userConversationRepository;
         private readonly IRepository<Location> _locationRepository;
         private readonly IRepository<User> _userRepository;
         private readonly IRepository<Match> _matchRepository;
@@ -23,6 +25,8 @@ namespace JoinJoy.Infrastructure.Services
 
 
         public MatchingService(
+            IRepository<Conversation> conversationRepository,
+            IRepository<UserConversation> userConversationRepository,
             IRepository<Location> locationRepository,
             IRepository<User> userRepository,
             IRepository<Match> matchRepository,
@@ -33,6 +37,8 @@ namespace JoinJoy.Infrastructure.Services
             IRepository<Category> category,
             HttpClient httpClient)
         {
+            _conversationRepository = conversationRepository;
+            _userConversationRepository = userConversationRepository;
             _locationRepository = locationRepository;
             _userRepository = userRepository;
             _matchRepository = matchRepository;
@@ -335,9 +341,27 @@ namespace JoinJoy.Infrastructure.Services
 
                 await _userActivity.AddAsync(userActivity);
             }
+            // Find the activity to get the associated conversation ID
+            var activity = await _activityRepository.GetByIdAsync(match.ActivityId);
+            if (activity == null)
+            {
+                return new ServiceResult { Success = false, Message = "Activity or associated conversation not found" };
+            }
+
+            // Add the user to the existing conversation
+            var userConversation = new UserConversation
+            {
+                UserId = userId,
+                ConversationId = activity.ConversationId
+            };
+            await _userConversationRepository.AddAsync(userConversation);
+
+            // Save changes
+            await _userConversationRepository.SaveChangesAsync();
 
             return new ServiceResult { Success = true, Message = "Invitation accepted and user added to the activity successfully" };
         }
+
         public async Task<IEnumerable<Match>> GetAllMatchesAsync()
         {
             return await _matchRepository.GetAllAsync();

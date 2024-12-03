@@ -118,6 +118,8 @@ namespace JoinJoy.WebApi
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IActivityService>(provider =>
             {
+                var userConversationRepository = provider.GetRequiredService<IRepository<UserConversation>>();
+                var conversationRepository = provider.GetRequiredService<IRepository<Conversation>>();
                 var feedbackRepository = provider.GetRequiredService<IRepository<Feedback>>();
                 var activityRepository = provider.GetRequiredService<IRepository<Activity>>();
                 var locationRepository = provider.GetRequiredService<IRepository<Location>>();
@@ -125,6 +127,8 @@ namespace JoinJoy.WebApi
                 var userActivityRepository = provider.GetRequiredService<IRepository<UserActivity>>();
                 var customLocationRepository = provider.GetRequiredService<ILocationRepository>();
                 return new ActivityService(
+                    userConversationRepository,
+                    conversationRepository,
                     feedbackRepository,
                     activityRepository,
                     locationRepository,

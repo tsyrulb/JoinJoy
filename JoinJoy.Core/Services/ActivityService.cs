@@ -12,6 +12,8 @@ namespace JoinJoy.Infrastructure.Services
 {
     public class ActivityService : IActivityService
     {
+        private readonly IRepository<UserConversation> _userConversationRepository;
+        private readonly IRepository<Conversation> _conversationRepository;
         private readonly IRepository<Feedback> _feedbackRepository;
         private readonly IRepository<Activity> _activityRepository;
         private readonly IRepository<Location> _locationRepository;
@@ -22,6 +24,8 @@ namespace JoinJoy.Infrastructure.Services
         private readonly string _geocodingApiKey;
 
         public ActivityService(
+            IRepository<UserConversation> userConversationRepository,
+            IRepository<Conversation> conversationRepository,
             IRepository<Feedback> feedbackRepository,
             IRepository<Activity> activityRepository,
             IRepository<Location> locationRepository,
@@ -32,6 +36,8 @@ namespace JoinJoy.Infrastructure.Services
             string geocodingApiKey
         )
         {
+            _userConversationRepository = userConversationRepository;
+            _conversationRepository = conversationRepository;
             _feedbackRepository = feedbackRepository;
             _activityRepository = activityRepository;
             _locationRepository = locationRepository;
@@ -139,6 +145,13 @@ namespace JoinJoy.Infrastructure.Services
                 };
 
                 await _locationRepository.AddAsync(newLocation);
+                // Create the conversation
+                var conversation = new Conversation
+                {
+                    Title = activityRequest.Name
+                };
+                await _conversationRepository.AddAsync(conversation);
+                await _conversationRepository.SaveChangesAsync();
 
                 var activity = new Activity
                 {
@@ -146,8 +159,16 @@ namespace JoinJoy.Infrastructure.Services
                     Description = activityRequest.Description,
                     Date = activityRequest.Date,
                     Location = newLocation,
-                    CreatedById = activityRequest.CreatedById
+                    CreatedById = activityRequest.CreatedById,
+                    ConversationId = conversation.Id
                 };
+                // Add the creator to the conversation participants
+                var userConversation = new UserConversation
+                {
+                    UserId = activityRequest.CreatedById,
+                    ConversationId = conversation.Id
+                };
+                await _userConversationRepository.AddAsync(userConversation);
 
                 await _activityRepository.AddAsync(activity);
 
@@ -292,6 +313,17 @@ namespace JoinJoy.Infrastructure.Services
             {
                 return new ServiceResult { Success = false, Message = "User is already part of the activity" };
             }
+            var conversation = await _conversationRepository.GetByIdAsync(activity.ConversationId);
+            if (conversation == null)
+            {
+                return new ServiceResult { Success = false, Message = "Associated conversation not found" };
+            }
+            var userConversation = new UserConversation
+            {
+                UserId = userId,
+                ConversationId = conversation.Id
+            };
+            await _userConversationRepository.AddAsync(userConversation);
 
             var userActivity = new UserActivity
             {

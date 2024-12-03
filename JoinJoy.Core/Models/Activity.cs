@@ -17,6 +17,8 @@ namespace JoinJoy.Core.Models
 
         public Location Location { get; set; } // Location of the activity
         public int CreatedById { get; set; } // ID of the user who created the activity
+        public int ConversationId { get; set; } // ID of the conversation for the activity
+        public Conversation Conversation { get; set; } // Associated conversation
 
         // Navigation properties
         public User CreatedBy { get; set; } // Reference to the user who created the activity
