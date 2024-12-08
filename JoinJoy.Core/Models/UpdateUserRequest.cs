@@ -10,5 +10,7 @@ public class UpdateUserRequest
     public string? Address { get; set; } // Address field
 
     public string? Gender { get; set;}
+
+    public double? distanceWillingToTravel { get; set;}
 }
 

@@ -23,12 +23,20 @@ namespace JoinJoy.WebApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterUserRequest model)
         {
+            // Convert city to coordinates and store/create location
+            var (latitude, longitude) = await _userService.GetCoordinatesAsync(model.City);
+
+            var locationId = await _userService.GetOrCreateLocationAsync(model.City, latitude, longitude);
+
             var user = new User
             {
                 Name = model.Name,
                 Email = model.Email,
                 Password = model.Password,
+                LocationId = locationId, // Assign the found/created location
+                DistanceWillingToTravel = 20
             };
+
             var result = await _userService.RegisterUserAsync(user);
             if (!result.Success)
             {
@@ -37,12 +45,14 @@ namespace JoinJoy.WebApi.Controllers
             return Ok(result.Message);
         }
 
+
         // Model for RegisterUserRequest
         public class RegisterUserRequest
         {
             public string Name { get; set; }
             public string Email { get; set; }
             public string Password { get; set; }
+            public string City { get; set; } 
         }
 
 
@@ -88,7 +98,8 @@ namespace JoinJoy.WebApi.Controllers
                 updateUserRequest.ProfilePhoto,
                 updateUserRequest.DateOfBirth,
                 updateUserRequest.Address,
-                updateUserRequest.Gender);
+                updateUserRequest.Gender,
+                updateUserRequest.distanceWillingToTravel);
             if (!result.Success)
             {
                 return BadRequest(result.Message);

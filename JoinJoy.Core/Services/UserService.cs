@@ -114,7 +114,17 @@ namespace JoinJoy.Infrastructure.Services
             return new ServiceResult { Success = true, Message = "Profile photo deleted successfully" };
         }
 
-        public async Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address, string? gender)
+        public async Task<ServiceResult> UpdateUserDetailsAsync(
+    int userId,
+    string? name,
+    string? email,
+    string? password,
+    string? profilePhoto,
+    DateTime? dateOfBirth,
+    string? address,
+    string? gender,
+    double? distanceWillingToTravel
+)
         {
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
@@ -135,6 +145,12 @@ namespace JoinJoy.Infrastructure.Services
                 user.Gender = gender;
             }
 
+            // Update Distance Willing to Travel if provided
+            if (distanceWillingToTravel.HasValue)
+            {
+                user.DistanceWillingToTravel = distanceWillingToTravel.Value;
+            }
+
             // Update location based on address if provided
             if (!string.IsNullOrEmpty(address))
             {
@@ -144,7 +160,8 @@ namespace JoinJoy.Infrastructure.Services
 
                     // Check if the location already exists
                     var existingLocation = await _locationRepository.FindAsync(
-                        loc => loc.Latitude == latitude && loc.Longitude == longitude);
+                        loc => loc.Latitude == latitude && loc.Longitude == longitude
+                    );
 
                     if (existingLocation.Any())
                     {
@@ -169,7 +186,11 @@ namespace JoinJoy.Infrastructure.Services
                 }
                 catch (Exception ex)
                 {
-                    return new ServiceResult { Success = false, Message = $"Failed to fetch coordinates for the provided address: {ex.Message}" };
+                    return new ServiceResult
+                    {
+                        Success = false,
+                        Message = $"Failed to fetch coordinates for the provided address: {ex.Message}"
+                    };
                 }
             }
 
@@ -177,6 +198,7 @@ namespace JoinJoy.Infrastructure.Services
 
             return new ServiceResult { Success = true, Message = "User details updated successfully" };
         }
+
         public async Task<Location?> GetUserLocationAsync(int userId)
         {
             // Fetch the user to get the LocationId
@@ -259,7 +281,7 @@ namespace JoinJoy.Infrastructure.Services
             await _userRepository.UpdateAsync(user);
             return new ServiceResult { Success = true, Message = "User details updated successfully" };
         } 
-        private async Task<(double latitude, double longitude)> GetCoordinatesAsync(string address)
+        public async Task<(double latitude, double longitude)> GetCoordinatesAsync(string address)
         {
             string requestUri = string.Format("https://maps.googleapis.com/maps/api/geocode/xml?address={0}&key={1}&sensor=false", Uri.EscapeDataString(address), _googleApiKey);
 
@@ -386,7 +408,30 @@ namespace JoinJoy.Infrastructure.Services
 
             return new ServiceResult { Success = true, Message = "Distance willing to travel updated successfully" };
         }
-        
+        public async Task<int> GetOrCreateLocationAsync(string address, double latitude, double longitude)
+        {
+            // Check if location already exists
+            var existingLocations = await _locationRepository.FindAsync(
+                loc => loc.Latitude == latitude && loc.Longitude == longitude);
+
+            if (existingLocations.Any())
+            {
+                return existingLocations.First().Id;
+            }
+            else
+            {
+                var newLocation = new Location
+                {
+                    Latitude = latitude,
+                    Longitude = longitude,
+                    Address = address
+                };
+
+                await _locationRepository.AddAsync(newLocation);
+                await _locationRepository.SaveChangesAsync();
+                return newLocation.Id;
+            }
+        }
 
 
 

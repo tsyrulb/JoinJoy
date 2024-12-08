@@ -18,11 +18,14 @@ namespace JoinJoy.Core.Services
         Task<ServiceResult> UpdateUserProfilePhotoAsync(int userId, string profilePhoto);
         Task<ServiceResult> AddUserSubcategoriesAsync(int userId, List<UserSubcategoryDto> subcategoryIds);
         Task<ServiceResult> RemoveUserSubcategoryAsync(int userId, int subcategoryId);
-        Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address, string? gender);
+        Task<ServiceResult> UpdateUserDetailsAsync(int userId, string? name, string? email, string? password, string? profilePhoto, DateTime? dateOfBirth, string? address, string? gender, double? distanceWillingToTravel);
         Task<ServiceResult> UpdateUserDistanceWillingToTravelAsync(int userId, double distance);
         Task<IEnumerable<UserSubcategory>> GetSubcategoriesByUserIdAsync(int userId);
         Task<Location?> GetUserLocationAsync(int userId);
+        Task<(double latitude, double longitude)> GetCoordinatesAsync(string address);
         Task<ServiceResult> DeleteUserProfilePhotoAsync(int userId);
         Task<ServiceResult<string>> UploadUserProfilePhotoAsync(int userId, Stream photoStream, string fileName);
+
+        Task<int> GetOrCreateLocationAsync(string address, double latitude, double longitude);
     }
 }
