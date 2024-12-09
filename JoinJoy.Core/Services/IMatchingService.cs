@@ -13,8 +13,8 @@ namespace JoinJoy.Infrastructure.Services
         Task<User> GetUserWithDetailsAsync(int userId);
         Task<IEnumerable<Subcategory>> GetAllSubcategoryAsync();
         Task<IEnumerable<UserSubcategory>> GetAllUserSubcategoryAsync();
-        Task<IEnumerable<UserRecommendation>> GetRecommendedUsersForActivityAsync(int activityId, int topN);
-        Task<IEnumerable<Activity>> GetRecommendedActivitiesForUserAsync(int userId, int topN);
+        Task<IEnumerable<UserRecommendation>> GetRecommendedUsersForActivityAsync(int activityId, int createdById, int topN);
+        Task<IEnumerable<ActivityWithExplanation>> GetRecommendedActivitiesForUserAsync(int userId, int topN);
         Task<ServiceResult> SendInvitationsAsync(int senderId, int activityId, List<int> receiverIds);
         Task<ServiceResult> AcceptInvitationAsync(int matchId, int userId);
         Task<IEnumerable<Match>> GetAllMatchesAsync();

@@ -13,5 +13,6 @@ namespace JoinJoy.Core.Models
         public double SimilarityScore { get; set; }
 
         public double Distance { get; set; }
+        public string Explanation { get; set; }
     }
 }

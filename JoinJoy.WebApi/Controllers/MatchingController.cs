@@ -84,11 +84,11 @@ namespace JoinJoy.WebApi.Controllers
             return Ok(categories);
         }
         [HttpGet("recommend-users")]
-        public async Task<IActionResult> GetRecommendedUsersForActivity([FromQuery] int activityId, [FromQuery] int topN = 20)
+        public async Task<IActionResult> GetRecommendedUsersForActivity([FromQuery] int activityId, [FromQuery] int createdById, [FromQuery] int topN = 20)
         {
             try
             {
-                var recommendations = await _matchingService.GetRecommendedUsersForActivityAsync(activityId, topN);
+                var recommendations = await _matchingService.GetRecommendedUsersForActivityAsync(activityId, createdById, topN);
                 return Ok(recommendations);
             }
             catch (Exception ex)

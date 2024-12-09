@@ -122,9 +122,9 @@ namespace JoinJoy.Infrastructure.Services
             return await _category.GetAllAsync();
         }
 
-        public async Task<IEnumerable<UserRecommendation>> GetRecommendedUsersForActivityAsync(int activityId, int topN)
+        public async Task<IEnumerable<UserRecommendation>> GetRecommendedUsersForActivityAsync(int activityId, int CreatedById, int topN)
         {
-            var flaskApiUrl = $"http://localhost:5000/recommend_users?activity_id={activityId}&top_n={topN}";
+            var flaskApiUrl = $"http://localhost:5000/recommend_users?activity_id={activityId}&user_id={CreatedById}&top_n={topN}";
 
             try
             {
@@ -147,7 +147,7 @@ namespace JoinJoy.Infrastructure.Services
             }
         }
 
-        public async Task<IEnumerable<Activity>> GetRecommendedActivitiesForUserAsync(int userId, int topN)
+        public async Task<IEnumerable<ActivityWithExplanation>> GetRecommendedActivitiesForUserAsync(int userId, int topN)
         {
             var flaskApiUrl = $"http://localhost:5000/recommend_activities?user_id={userId}&top_n={topN}";
 
@@ -157,11 +157,12 @@ namespace JoinJoy.Infrastructure.Services
 
                 if (response.IsSuccessStatusCode)
                 {
+                    // ActivityRecommendation now includes Explanation property
                     var recommendations = await response.Content.ReadFromJsonAsync<IEnumerable<ActivityRecommendation>>();
 
                     if (recommendations == null || !recommendations.Any())
                     {
-                        return Enumerable.Empty<Activity>();
+                        return Enumerable.Empty<ActivityWithExplanation>();
                     }
 
                     // Extract activity IDs from the recommendations
@@ -171,7 +172,7 @@ namespace JoinJoy.Infrastructure.Services
                     var activities = await _activityRepository.FindAsync(a => activityIds.Contains(a.Id));
                     if (!activities.Any())
                     {
-                        return Enumerable.Empty<Activity>();
+                        return Enumerable.Empty<ActivityWithExplanation>();
                     }
 
                     // Extract location IDs from the activities
@@ -185,7 +186,17 @@ namespace JoinJoy.Infrastructure.Services
                     {
                         activity.Location = locations.FirstOrDefault(l => l.Id == activity.LocationId);
                     }
-                    return activities;
+
+                    // Join the activities with their explanations
+                    var activitiesWithExplanations = from rec in recommendations
+                                                     join act in activities on rec.ActivityId equals act.Id
+                                                     select new ActivityWithExplanation
+                                                     {
+                                                         Activity = act,
+                                                         Explanation = rec.Explanation
+                                                     };
+
+                    return activitiesWithExplanations;
                 }
                 else
                 {
