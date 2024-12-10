@@ -22,6 +22,7 @@ namespace JoinJoy.Core.Models
 
         // Navigation properties
         public ICollection<UserActivity>? UserActivities { get; set; }
+       
         public ICollection<Match>? Matches { get; set; }
         public ICollection<Message>? SentMessages { get; set; } // Sent messages
         public ICollection<Message>? ReceivedMessages { get; set; } // Received messages

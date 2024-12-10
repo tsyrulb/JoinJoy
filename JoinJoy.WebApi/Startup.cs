@@ -60,10 +60,28 @@ namespace JoinJoy.WebApi
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
-                    NameClaimType = ClaimTypes.NameIdentifier  // Sets the default claim for user identity
+                    NameClaimType = ClaimTypes.NameIdentifier
+                };
 
+                // Enable reading token from query string for SignalR requests
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // If the request is to the SignalR hub endpoint (adjust the path if needed)
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notificationHub"))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
                 };
             });
+
             var geocodingApiKey = Configuration["GeocodingApi:ApiKey"];
             var huggingFaceApiKey = Configuration["HuggingFaceApiKey"];
             // Add CORS policy to allow Angular frontend
@@ -73,7 +91,8 @@ namespace JoinJoy.WebApi
                 {
                     builder.WithOrigins("http://localhost:4200")  // Angular URL
                            .AllowAnyMethod()
-                           .AllowAnyHeader();
+                           .AllowAnyHeader()
+                           .AllowCredentials();
                 });
             });
             // Register repositories
@@ -144,13 +163,18 @@ namespace JoinJoy.WebApi
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();
             services.AddHttpClient<MatchingService>();
-
+            // Add SignalR
+            services.AddSignalR().AddJsonProtocol(options =>
+            {
+                options.PayloadSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                options.PayloadSerializerOptions.WriteIndented = false;
+            });
+            services.AddScoped<INotificationService, SignalRNotificationService>();
 
             services.AddAuthorization();
 
             services.AddLogging();
-            // Add SignalR
-            services.AddSignalR();
+
 
             // Register the Swagger generator, defining one or more Swagger documents
             services.AddSwaggerGen(c =>
@@ -162,6 +186,9 @@ namespace JoinJoy.WebApi
                     .AddNewtonsoftJson(options =>
                     {
                         options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                    }).AddJsonOptions(options =>
+                    {
+                        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
                     });
         }
 
@@ -173,7 +200,7 @@ namespace JoinJoy.WebApi
             }
 
             app.UseHttpsRedirection();
-            app.UseCors("AllowAngular");  // Enable the CORS policy
+            app.UseCors("AllowAngular");  
             app.UseAuthentication();
 
             app.UseRouting();
@@ -199,6 +226,7 @@ namespace JoinJoy.WebApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<NotificationHub>("/notificationHub");
             });
 
             // Ensure the database is seeded
