@@ -84,7 +84,7 @@ namespace JoinJoy.WebApi.Controllers
             return Ok(categories);
         }
         [HttpGet("recommend-users")]
-        public async Task<IActionResult> GetRecommendedUsersForActivity([FromQuery] int activityId, [FromQuery] int createdById, [FromQuery] int topN = 20)
+        public async Task<IActionResult> GetRecommendedUsersForActivity([FromQuery] int activityId, [FromQuery] int createdById, [FromQuery] int topN = 100)
         {
             try
             {
