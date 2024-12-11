@@ -12,7 +12,6 @@ using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Security.Claims;
 
 namespace JoinJoy.WebApi
@@ -35,16 +34,18 @@ namespace JoinJoy.WebApi
 
             var googleApiKey = Configuration["GoogleApiKey"];
             var jwtSecret = Configuration["JwtSettings:Secret"];
-            // CORS policy for Angular frontend
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAngular", builder =>
                 {
-                    builder.WithOrigins("http://localhost:4200")  // Angular URL
+                    builder.WithOrigins("http://localhost:4200")
                            .AllowAnyMethod()
-                           .AllowAnyHeader();
+                           .AllowAnyHeader()
+                           .AllowCredentials();
                 });
             });
+
             // Configure JWT authentication
             services.AddAuthentication(options =>
             {
@@ -69,14 +70,11 @@ namespace JoinJoy.WebApi
                     OnMessageReceived = context =>
                     {
                         var accessToken = context.Request.Query["access_token"];
-
-                        // If the request is to the SignalR hub endpoint (adjust the path if needed)
                         var path = context.HttpContext.Request.Path;
                         if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notificationHub"))
                         {
                             context.Token = accessToken;
                         }
-
                         return Task.CompletedTask;
                     }
                 };
@@ -84,17 +82,7 @@ namespace JoinJoy.WebApi
 
             var geocodingApiKey = Configuration["GeocodingApi:ApiKey"];
             var huggingFaceApiKey = Configuration["HuggingFaceApiKey"];
-            // Add CORS policy to allow Angular frontend
-            services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAngular", builder =>
-                {
-                    builder.WithOrigins("http://localhost:4200")  // Angular URL
-                           .AllowAnyMethod()
-                           .AllowAnyHeader()
-                           .AllowCredentials();
-                });
-            });
+
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddSingleton(new BlobStorageService(
@@ -104,14 +92,13 @@ namespace JoinJoy.WebApi
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ISubcategoryRepository, SubcategoryRepository>();
-            services.AddScoped<ILocationRepository, LocationRepository>(); // Ensure LocationRepository is registered
+            services.AddScoped<ILocationRepository, LocationRepository>();
             services.AddScoped<IUserActivityRepository, UserActivityRepository>();
             services.AddScoped<IRepository<Match>, Repository<Match>>();
-            // Register message service and repository
             services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<OpenStreetMapService>();
             services.AddHttpClient<OpenStreetMapService>();
-            services.AddScoped<IMessageRepository, MessageRepository>();  // Add this line
+            services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IUserUnavailabilityService, UserUnavailabilityService>();
             services.AddScoped<IRepository<UserUnavailability>, Repository<UserUnavailability>>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
@@ -163,6 +150,7 @@ namespace JoinJoy.WebApi
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();
             services.AddHttpClient<MatchingService>();
+
             // Add SignalR
             services.AddSignalR().AddJsonProtocol(options =>
             {
@@ -172,11 +160,8 @@ namespace JoinJoy.WebApi
             services.AddScoped<INotificationService, SignalRNotificationService>();
 
             services.AddAuthorization();
-
             services.AddLogging();
 
-
-            // Register the Swagger generator, defining one or more Swagger documents
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "JoinJoy API", Version = "v1" });
@@ -192,7 +177,7 @@ namespace JoinJoy.WebApi
                     });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ApplicationDbContext context)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -200,27 +185,20 @@ namespace JoinJoy.WebApi
             }
 
             app.UseHttpsRedirection();
-            app.UseCors("AllowAngular");  
+            app.UseCors("AllowAngular");
             app.UseAuthentication();
 
             app.UseRouting();
-
-
-
             app.UseAuthorization();
 
             app.UseMiddleware<AuthenticationMiddleware>();
             app.UseMiddleware<ChatMiddleware>();
 
-            // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
-
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
-            // specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "JoinJoy API v1");
-                c.RoutePrefix = string.Empty;  // Set Swagger UI at the root of the application
+                c.RoutePrefix = string.Empty;
             });
 
             app.UseEndpoints(endpoints =>
@@ -229,12 +207,16 @@ namespace JoinJoy.WebApi
                 endpoints.MapHub<NotificationHub>("/notificationHub");
             });
 
-            // Ensure the database is seeded
-            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            // Synchronously run the seeding
+            using (var serviceScope = app.ApplicationServices.CreateScope())
             {
-                var _context = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                DatabaseSeeder.SeedAsync(context).Wait();
+                var db = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                db.Database.Migrate();
+
+                // Instead of await:
+                DatabaseSeeder.SeedAsync(db).GetAwaiter().GetResult();
             }
+
         }
     }
 }
