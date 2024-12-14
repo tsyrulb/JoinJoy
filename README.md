@@ -26,7 +26,7 @@ Key endpoints:
 
 Challenges solved:
 - Securing user data with JWT-based authentication
-- Efficiently handling large data sets with Entity Framework Core and caching with Redis
+- Efficiently handling large data sets with Entity Framework Core
 - Integrating multiple external services (Azure SQL, Blob Storage, Flask API) for a smooth user experience
 
 This Web API can be deployed to various cloud platforms and easily integrated with the rest of the JoinJoy system.
