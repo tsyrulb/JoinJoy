@@ -1,4 +1,6 @@
-[Matching API repository]([https://github.com/username/example-repo](https://github.com/tsyrulb/joinjoy-matching))
+[![Matching API](https://img.shields.io/badge/GitHub-Visit%20Another%20Repo-yellow?style=for-the-badge)](https://github.com/tsyrulb/joinjoy-matching)
+[![Frontend](https://img.shields.io/badge/GitHub-Visit%20Another%20Repo-blue?style=for-the-badge)](https://github.com/tsyrulb/join-joy-front)
+
 
 The JoinJoy Web API is a .NET backend service that manages users and activities for the JoinJoy platform. It connects to other parts of the system, like the Flask API for advanced recommendations, Azure SQL Database to store data, and Azure Blob Storage for profile photos.
 ![Description of GIF](JoinJoy4.gif)
